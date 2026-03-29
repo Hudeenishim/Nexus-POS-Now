@@ -1,0 +1,160 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: uid (string), name (string), email (string), role (string), createdAt (timestamp)
+    //
+    // Collection: products
+    // Fields: name (string), category (string), price (number), quantity (int), barcode (string), lowStockThreshold (int), createdAt (timestamp)
+    //
+    // Collection: customers
+    // Fields: name (string), phone (string), email (string), address (string), loyaltyPoints (int), createdAt (timestamp)
+    //
+    // Collection: sales
+    // Fields: date (timestamp), userId (string), customerId (string), totalAmount (number), paymentMethod (string), discount (number), tax (number), createdAt (timestamp)
+    //
+    // Collection: sales_items
+    // Fields: saleId (string), productId (string), quantity (int), price (number), createdAt (timestamp)
+    //
+    // Collection: inventory_logs
+    // Fields: productId (string), type (string), quantity (int), userId (string), createdAt (timestamp)
+    //
+    // Collection: suppliers
+    // Fields: name (string), contactPerson (string), phone (string), email (string), address (string), category (string), createdAt (timestamp)
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((request.auth.token.email == "salahnapari@gmail.com" && request.auth.token.email_verified == true) ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isManager() {
+      return isAuthenticated() &&
+        (isAdmin() || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager'));
+    }
+
+    function isCashier() {
+      return isAuthenticated() &&
+        (isManager() || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'cashier'));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'phoneNumber', 'createdAt']) &&
+             data.uid is string && data.uid.size() < 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             isValidEmail(data.email) && data.email.size() < 256 &&
+             data.role in ['admin', 'manager', 'cashier'] &&
+             (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() < 20));
+    }
+
+    function isValidProduct(data) {
+      return hasOnlyAllowedFields(['name', 'category', 'price', 'quantity', 'barcode', 'lowStockThreshold', 'supplierId', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.price is number && data.price >= 0 &&
+             data.quantity is int &&
+             data.barcode is string && data.barcode.size() > 0 && data.barcode.size() < 100;
+    }
+
+    function isValidSupplier(data) {
+      return hasOnlyAllowedFields(['name', 'contactPerson', 'phone', 'email', 'address', 'category', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.contactPerson is string && data.contactPerson.size() > 0 && data.contactPerson.size() < 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() < 20;
+    }
+
+    function isValidSale(data) {
+      return hasOnlyAllowedFields(['date', 'userId', 'customerId', 'totalAmount', 'paymentMethod', 'paymentReference', 'discount', 'tax', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.totalAmount is number && data.totalAmount >= 0 &&
+             data.paymentMethod in ['cash', 'card', 'mobile_money', 'mtn_momo', 'telecel_cash'] &&
+             (!('paymentReference' in data) || (data.paymentReference == null || (data.paymentReference is string && data.paymentReference.size() < 100)));
+    }
+
+    // ===============================================================
+    // Match Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow create: if isManager() && isValidProduct(request.resource.data);
+      allow update: if isCashier() && (isValidProduct(request.resource.data) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /customers/{customerId} {
+      allow read: if isAuthenticated();
+      allow create: if isCashier();
+      allow update: if isCashier();
+      allow delete: if isManager();
+    }
+
+    match /sales/{saleId} {
+      allow read: if true;
+      allow create: if isCashier() && isValidSale(request.resource.data);
+      allow update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    match /sales_items/{itemId} {
+      allow read: if true;
+      allow create: if isCashier();
+      allow update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    match /inventory_logs/{logId} {
+      allow read: if isManager();
+      allow create: if isCashier();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /suppliers/{supplierId} {
+      allow read: if isAuthenticated();
+      allow create: if isManager() && isValidSupplier(request.resource.data);
+      allow update: if isManager() && isValidSupplier(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

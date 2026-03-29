@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System users with roles (Admin, Manager, Cashier)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phoneNumber": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "manager", "cashier"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Items available for sale",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "quantity": { "type": "integer" },
+        "barcode": { "type": "string" },
+        "lowStockThreshold": { "type": "integer" },
+        "supplierId": { "type": "string", "description": "ID of the supplier" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "quantity", "barcode"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Product suppliers",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "address": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "contactPerson", "phone"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer information and loyalty",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "address": { "type": "string" },
+        "loyaltyPoints": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Transaction record",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "card", "mobile_money", "mtn_momo", "telecel_cash"] },
+        "paymentReference": { "type": "string" },
+        "discount": { "type": "number" },
+        "tax": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "userId", "totalAmount", "paymentMethod"]
+    },
+    "SaleItem": {
+      "title": "SaleItem",
+      "description": "Individual items in a sale",
+      "type": "object",
+      "properties": {
+        "saleId": { "type": "string" },
+        "productId": { "type": "string" },
+        "quantity": { "type": "integer" },
+        "price": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["saleId", "productId", "quantity", "price"]
+    },
+    "InventoryLog": {
+      "title": "InventoryLog",
+      "description": "Tracking stock changes",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "type": { "type": "string", "enum": ["sale", "restock", "adjustment"] },
+        "quantity": { "type": "integer" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "type", "quantity", "userId"]
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "Collection of system users" },
+    "products": { "schema": "Product", "description": "Collection of products" },
+    "customers": { "schema": "Customer", "description": "Collection of customers" },
+    "sales": { "schema": "Sale", "description": "Collection of sales transactions" },
+    "sales_items": { "schema": "SaleItem", "description": "Collection of sale items" },
+    "inventory_logs": { "schema": "InventoryLog", "description": "Collection of inventory logs" },
+    "suppliers": { "schema": "Supplier", "description": "Collection of product suppliers" }
+  }
+}
