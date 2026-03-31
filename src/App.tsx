@@ -16,17 +16,38 @@ import { Header } from './components/Header';
 import { RoleSelection } from './components/RoleSelection';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+// Helper for lazy loading with retry
+const lazyRetry = (componentImport: () => Promise<any>) => {
+  return lazy(async () => {
+    const pageHasAlreadyBeenReloaded = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-reloaded') || 'false'
+    );
+
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-reloaded', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenReloaded) {
+        window.sessionStorage.setItem('page-has-been-reloaded', 'true');
+        window.location.reload();
+      }
+      throw error;
+    }
+  });
+};
+
 // Pages - Lazy Loaded
-const LoginPage = lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
-const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
-const POS = lazy(() => import('./components/POS').then(m => ({ default: m.POS })));
-const CartPage = lazy(() => import('./components/CartPage').then(m => ({ default: m.CartPage })));
-const Inventory = lazy(() => import('./components/Inventory').then(m => ({ default: m.Inventory })));
-const Suppliers = lazy(() => import('./components/Suppliers').then(m => ({ default: m.Suppliers })));
-const Customers = lazy(() => import('./components/Customers').then(m => ({ default: m.Customers })));
-const Reports = lazy(() => import('./components/Reports').then(m => ({ default: m.Reports })));
-const SettingsPage = lazy(() => import('./components/Settings').then(m => ({ default: m.SettingsPage })));
-const PrintPage = lazy(() => import('./components/PrintPage').then(m => ({ default: m.PrintPage })));
+const LoginPage = lazyRetry(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
+const Dashboard = lazyRetry(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const POS = lazyRetry(() => import('./components/POS').then(m => ({ default: m.POS })));
+const CartPage = lazyRetry(() => import('./components/CartPage').then(m => ({ default: m.CartPage })));
+const Inventory = lazyRetry(() => import('./components/Inventory').then(m => ({ default: m.Inventory })));
+const Suppliers = lazyRetry(() => import('./components/Suppliers').then(m => ({ default: m.Suppliers })));
+const Customers = lazyRetry(() => import('./components/Customers').then(m => ({ default: m.Customers })));
+const Reports = lazyRetry(() => import('./components/Reports').then(m => ({ default: m.Reports })));
+const SettingsPage = lazyRetry(() => import('./components/Settings').then(m => ({ default: m.SettingsPage })));
+const PrintPage = lazyRetry(() => import('./components/PrintPage').then(m => ({ default: m.PrintPage })));
 
 // Lib & Firebase
 import { db } from './firebase';

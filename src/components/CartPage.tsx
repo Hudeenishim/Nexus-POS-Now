@@ -31,11 +31,13 @@ import {
 } from 'firebase/firestore';
 import { Sale, SaleItem } from '../types';
 import { cn, formatCurrency, OperationType, handleFirestoreError } from '../lib/utils';
+import { Receipt } from './Receipt';
 
 export const CartPage = () => {
   const { user } = useAuth();
   const { cart, removeFromCart, updateQuantity, clearCart, subtotal, tax, total } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mtn_momo' | 'telecel_cash'>('cash');
+  const [paymentPhone, setPaymentPhone] = useState(user?.phoneNumber || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastSale, setLastSale] = useState<{ sale: Sale; items: SaleItem[] } | null>(null);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
@@ -62,7 +64,7 @@ export const CartPage = () => {
           metadata: {
             custom_fields: [
               { display_name: "Customer Name", variable_name: "customer_name", value: user.name },
-              { display_name: "Customer Phone", variable_name: "customer_phone", value: user.phoneNumber || "" },
+              { display_name: "Customer Phone", variable_name: "customer_phone", value: paymentPhone || user.phoneNumber || "" },
               { display_name: "Payment Provider", variable_name: "payment_provider", value: paymentMethod }
             ]
           },
@@ -301,7 +303,10 @@ export const CartPage = () => {
                 ].map((method) => (
                   <button
                     key={method.id}
-                    onClick={() => setPaymentMethod(method.id as any)}
+                    onClick={() => {
+                      setPaymentMethod(method.id as any);
+                      if (!paymentPhone && user?.phoneNumber) setPaymentPhone(user.phoneNumber);
+                    }}
                     className={cn(
                       "flex items-center gap-4 p-5 rounded-2xl border-2 transition-all text-left group relative overflow-hidden",
                       paymentMethod === method.id 
@@ -332,6 +337,27 @@ export const CartPage = () => {
                   </button>
                 ))}
               </div>
+
+              {(paymentMethod === 'mtn_momo' || paymentMethod === 'telecel_cash') && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="space-y-2 pt-2"
+                >
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-fg ml-1">Payment Phone Number</label>
+                  <div className="relative group">
+                    <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg group-focus-within:text-primary transition-colors" size={18} />
+                    <input 
+                      type="tel"
+                      value={paymentPhone}
+                      onChange={(e) => setPaymentPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="0244123456"
+                      maxLength={10}
+                      className="input !pl-10 h-12 font-bold tracking-widest"
+                    />
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             <button 
@@ -400,11 +426,12 @@ export const CartPage = () => {
                 {lastSale && (
                   <button 
                     onClick={() => {
+                      // We'll keep lastSale set but close the animation
                       setShowSuccessAnimation(false);
                     }}
                     className="btn bg-muted/50 hover:bg-muted w-full py-5 rounded-2xl font-black uppercase tracking-widest text-sm border border-border/50"
                   >
-                    View Receipt
+                    Print Receipt
                   </button>
                 )}
               </div>
@@ -415,67 +442,11 @@ export const CartPage = () => {
 
       <AnimatePresence>
         {lastSale && (
-          <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white text-black w-full max-w-md p-8 rounded-3xl shadow-2xl relative my-8"
-            >
-              <button 
-                onClick={() => setLastSale(null)}
-                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
-              >
-                <Trash2 size={24} />
-              </button>
-
-              <div className="text-center space-y-2 border-b border-dashed border-gray-200 pb-6">
-                <h2 className="text-3xl font-black tracking-tighter uppercase">NEXUS POS</h2>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Digital Receipt</p>
-                <div className="pt-2">
-                  <p className="text-[10px] font-mono text-gray-400">ID: {lastSale.sale.id}</p>
-                  <p className="text-[10px] font-mono text-gray-400">{new Date(lastSale.sale.date).toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div className="py-6 space-y-4">
-                <div className="space-y-3">
-                  {lastSale.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-start text-sm">
-                      <div className="flex-1">
-                        <p className="font-black uppercase tracking-tight">{item.productName}</p>
-                        <p className="text-[10px] text-gray-500 font-bold">{item.quantity} x {formatCurrency(item.price)}</p>
-                      </div>
-                      <p className="font-black">{formatCurrency(item.price * item.quantity)}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-4 border-t border-dashed border-gray-200 space-y-2">
-                  <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(lastSale.sale.totalAmount - lastSale.sale.tax)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
-                    <span>Tax (8%)</span>
-                    <span>{formatCurrency(lastSale.sale.tax)}</span>
-                  </div>
-                  <div className="flex justify-between text-xl font-black pt-2 border-t border-gray-100">
-                    <span className="tracking-tighter uppercase">Total</span>
-                    <span className="text-primary">{formatCurrency(lastSale.sale.totalAmount)}</span>
-                  </div>
-                </div>
-
-                <div className="pt-6 text-center space-y-4">
-                  <div className="inline-block p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Payment Method</p>
-                    <p className="text-sm font-black uppercase tracking-tight">{lastSale.sale.paymentMethod.replace('_', ' ')}</p>
-                  </div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">Thank you for your business!</p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+          <Receipt 
+            sale={lastSale.sale} 
+            items={lastSale.items} 
+            onClose={() => setLastSale(null)} 
+          />
         )}
       </AnimatePresence>
     </div>

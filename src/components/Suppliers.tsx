@@ -179,7 +179,13 @@ export const Suppliers = () => {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold uppercase text-muted-fg">Phone <span className="text-red-500">*</span></label>
-                    <input required className="input" value={newSupplier.phone} onChange={e => setNewSupplier({...newSupplier, phone: e.target.value})} />
+                    <input 
+                      required 
+                      className="input" 
+                      value={newSupplier.phone} 
+                      onChange={e => setNewSupplier({...newSupplier, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
+                      maxLength={10}
+                    />
                   </div>
                 </div>
                 <div className="space-y-1">

@@ -18,8 +18,8 @@ export function formatDate(date: Date | string) {
 }
 
 export function isValidGhanaPhone(phone: string) {
-  // Ghanaian phone numbers: 02x, 03x, 05x followed by 7 digits, or +233 followed by 9 digits
-  const ghanaPhoneRegex = /^(0|\+233)[235][0-9]{8}$/;
+  // Ghanaian phone numbers: 02x, 03x, 05x followed by 7 digits (Strict 10 digits)
+  const ghanaPhoneRegex = /^0[235][0-9]{8}$/;
   return ghanaPhoneRegex.test(phone);
 }
 

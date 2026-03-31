@@ -269,12 +269,17 @@ export const LoginPage = () => {
                       <input 
                         type="tel" 
                         value={phone}
-                        onChange={(e) => { setPhone(e.target.value); if(errors.phone) setErrors({...errors, phone: ''}); }}
+                        onChange={(e) => { 
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setPhone(val); 
+                          if(errors.phone) setErrors({...errors, phone: ''}); 
+                        }}
                         className={cn(
                           "input w-full !pl-10 h-12",
                           errors.phone && "border-red-500 bg-red-500/5 animate-shake"
                         )} 
                         placeholder="0244123456"
+                        maxLength={10}
                         disabled={isSigningIn}
                       />
                     </div>
@@ -371,13 +376,9 @@ export const LoginPage = () => {
             </button>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/50"></div>
-            </div>
-            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-              <span className="bg-bg px-4 text-muted-fg">Or continue with</span>
-            </div>
+          <div className="w-full border-t border-border/50 my-8"></div>
+          <div className="text-center mb-4">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-fg">Or continue with</span>
           </div>
 
           <button 

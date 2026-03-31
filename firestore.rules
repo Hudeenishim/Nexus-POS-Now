@@ -71,7 +71,7 @@ service cloud.firestore {
     }
 
     function isValidGhanaPhone(phone) {
-      return phone is string && phone.matches("^(0|\\+233)[235][0-9]{8}$");
+      return phone is string && phone.matches("^0[235][0-9]{8}$");
     }
 
     // ===============================================================
@@ -81,7 +81,7 @@ service cloud.firestore {
       return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'phoneNumber', 'createdAt']) &&
              data.uid is string &&
              data.name is string &&
-             isValidEmail(data.email) &&
+             (data.email == "" || isValidEmail(data.email)) &&
              (!('phoneNumber' in data) || isValidGhanaPhone(data.phoneNumber)) &&
              data.createdAt is string;
     }
@@ -96,10 +96,10 @@ service cloud.firestore {
 
     function isValidProduct(data) {
       return hasOnlyAllowedFields(['name', 'category', 'price', 'quantity', 'barcode', 'lowStockThreshold', 'supplierId', 'createdAt', 'id']) &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
-             data.price is number && data.price >= 0 &&
-             data.quantity is int &&
-             data.barcode is string && data.barcode.size() > 0 && data.barcode.size() < 100 &&
+             (!('name' in data) || (data.name is string && data.name.size() > 0 && data.name.size() < 200)) &&
+             (!('price' in data) || (data.price is number && data.price >= 0)) &&
+             (!('quantity' in data) || (data.quantity is int)) &&
+             (!('barcode' in data) || (data.barcode is string && data.barcode.size() > 0 && data.barcode.size() < 100)) &&
              (!('lowStockThreshold' in data) || data.lowStockThreshold is int) &&
              (!('supplierId' in data) || data.supplierId is string);
     }
@@ -139,11 +139,8 @@ service cloud.firestore {
     match /products/{productId} {
       allow read: if true;
       allow create: if isManager() && isValidProduct(request.resource.data);
-      allow update: if isCashier() && (
-        isValidProduct(request.resource.data) || 
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']) && request.resource.data.quantity is int) ||
-        isAdmin()
-      );
+      allow update: if (isManager() && isValidProduct(request.resource.data)) || 
+                    (isCashier() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']) && request.resource.data.quantity is int);
       allow delete: if isAdmin();
     }
 
