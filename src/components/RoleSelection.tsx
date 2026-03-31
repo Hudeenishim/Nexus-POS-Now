@@ -5,7 +5,7 @@ import { useAuth } from './AuthProvider';
 import { cn } from '../lib/utils';
 
 export const RoleSelection = () => {
-  const { updateUserRole } = useAuth();
+  const { user, updateUserRole } = useAuth();
   const [selectedRole, setSelectedRole] = useState<'admin' | 'manager' | 'cashier' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -56,8 +56,8 @@ export const RoleSelection = () => {
         className="max-w-2xl w-full space-y-12"
       >
         <div className="text-center space-y-4">
-          <h1 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-fg to-muted-fg">
-            CHOOSE YOUR ROLE
+          <h1 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-fg to-muted-fg uppercase">
+            WELCOME, {user?.name || 'USER'}
           </h1>
           <p className="text-muted-fg font-bold uppercase tracking-widest text-xs">
             Select your primary responsibility to initialize your workspace

@@ -3,6 +3,7 @@ export type UserRole = 'admin' | 'manager' | 'cashier';
 export interface User {
   uid: string;
   name: string;
+  username: string;
   email: string;
   phoneNumber?: string;
   role?: UserRole;

@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const newUser: User = {
               uid: firebaseUser.uid,
               name: firebaseUser.displayName || 'User',
+              username: firebaseUser.displayName || 'user_' + firebaseUser.uid.slice(0, 5),
               email: firebaseUser.email || '',
               createdAt: new Date().toISOString(),
             };
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newUser: User = {
           uid: firebaseUser.uid,
           name: firebaseUser.displayName || 'User',
+          username: firebaseUser.displayName || 'user_' + firebaseUser.uid.slice(0, 5),
           email: firebaseUser.email || '',
           createdAt: new Date().toISOString(),
         };
@@ -81,8 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           handleFirestoreError(error, OperationType.CREATE, `users/${firebaseUser.uid}`, auth);
         }
       }
-    } catch (error) {
-      console.error('Sign in error:', error);
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+        console.error('Sign in error:', error);
+      }
       throw error;
     } finally {
       setIsSigningIn(false);
@@ -113,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newUser: User = {
         uid: firebaseUser.uid,
         name,
+        username: name,
         email,
         phoneNumber: phone,
         createdAt: new Date().toISOString(),

@@ -109,7 +109,9 @@ export const LoginPage = () => {
       setIsSuccess(true);
       toast.success('Welcome to Nexus POS');
     } catch (error: any) {
-      console.error('Google login error:', error);
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+        console.error('Google login error:', error);
+      }
       let message = 'Login failed';
       try {
         const parsed = JSON.parse(error.message);
