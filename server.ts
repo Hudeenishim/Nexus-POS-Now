@@ -81,34 +81,10 @@ async function setupApp() {
       const { createServer } = await import("vite");
       const vite = await createServer({
         server: { middlewareMode: true },
-        appType: "custom", // Use custom to handle fallback manually
+        appType: "spa",
       });
       app.use(vite.middlewares);
       log("Vite middleware attached.");
-
-      // Catch-all for SPA in dev mode
-      app.get("*", async (req, res, next) => {
-        // Skip API routes
-        if (req.url.startsWith("/api/")) {
-          return next();
-        }
-        
-        // Skip static assets (usually have extensions)
-        if (req.url.includes(".")) {
-          return next();
-        }
-
-        try {
-          const url = req.originalUrl;
-          log(`SPA Fallback (Vite Custom) for: ${url}`);
-          const template = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf-8");
-          const html = await vite.transformIndexHtml(url, template);
-          res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-        } catch (e) {
-          log(`Vite transform error: ${e}`);
-          next(e);
-        }
-      });
     } catch (e) {
       log(`Vite failed to start: ${e}`);
       app.get("*", (req, res) => {

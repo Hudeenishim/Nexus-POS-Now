@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   phoneNumber?: string;
-  role: UserRole;
+  role?: UserRole;
   createdAt: string;
 }
 
@@ -58,6 +58,7 @@ export interface Sale {
 export interface SaleItem {
   id: string;
   saleId: string;
+  userId: string;
   productId: string;
   productName: string;
   quantity: number;

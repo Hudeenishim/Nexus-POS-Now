@@ -17,6 +17,17 @@ export function formatDate(date: Date | string) {
   }).format(d);
 }
 
+export function isValidGhanaPhone(phone: string) {
+  // Ghanaian phone numbers: 02x, 03x, 05x followed by 7 digits, or +233 followed by 9 digits
+  const ghanaPhoneRegex = /^(0|\+233)[235][0-9]{8}$/;
+  return ghanaPhoneRegex.test(phone);
+}
+
+export function isValidEmail(email: string) {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+}
+
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',

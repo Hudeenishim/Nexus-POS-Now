@@ -17,7 +17,7 @@ service cloud.firestore {
     // Fields: date (timestamp), userId (string), customerId (string), totalAmount (number), paymentMethod (string), discount (number), tax (number), createdAt (timestamp)
     //
     // Collection: sales_items
-    // Fields: saleId (string), productId (string), quantity (int), price (number), createdAt (timestamp)
+    // Fields: saleId (string), productId (string), userId (string), quantity (int), price (number), createdAt (timestamp)
     //
     // Collection: inventory_logs
     // Fields: productId (string), type (string), quantity (int), userId (string), createdAt (timestamp)
@@ -70,31 +70,46 @@ service cloud.firestore {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
+    function isValidGhanaPhone(phone) {
+      return phone is string && phone.matches("^(0|\\+233)[235][0-9]{8}$");
+    }
+
     // ===============================================================
     // Domain Validators
     // ===============================================================
     function isValidUser(data) {
       return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'phoneNumber', 'createdAt']) &&
-             data.uid is string && data.uid.size() < 128 &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             isValidEmail(data.email) && data.email.size() < 256 &&
-             data.role in ['admin', 'manager', 'cashier'] &&
-             (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() < 20));
+             data.uid is string &&
+             data.name is string &&
+             isValidEmail(data.email) &&
+             (!('phoneNumber' in data) || isValidGhanaPhone(data.phoneNumber)) &&
+             data.createdAt is string;
+    }
+
+    function isValidCustomer(data) {
+      return hasOnlyAllowedFields(['name', 'phone', 'email', 'address', 'loyaltyPoints', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 &&
+             isValidGhanaPhone(data.phone) &&
+             isValidEmail(data.email) &&
+             data.loyaltyPoints is int;
     }
 
     function isValidProduct(data) {
-      return hasOnlyAllowedFields(['name', 'category', 'price', 'quantity', 'barcode', 'lowStockThreshold', 'supplierId', 'createdAt']) &&
+      return hasOnlyAllowedFields(['name', 'category', 'price', 'quantity', 'barcode', 'lowStockThreshold', 'supplierId', 'createdAt', 'id']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
              data.price is number && data.price >= 0 &&
              data.quantity is int &&
-             data.barcode is string && data.barcode.size() > 0 && data.barcode.size() < 100;
+             data.barcode is string && data.barcode.size() > 0 && data.barcode.size() < 100 &&
+             (!('lowStockThreshold' in data) || data.lowStockThreshold is int) &&
+             (!('supplierId' in data) || data.supplierId is string);
     }
 
     function isValidSupplier(data) {
       return hasOnlyAllowedFields(['name', 'contactPerson', 'phone', 'email', 'address', 'category', 'createdAt']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
              data.contactPerson is string && data.contactPerson.size() > 0 && data.contactPerson.size() < 100 &&
-             data.phone is string && data.phone.size() > 0 && data.phone.size() < 20;
+             isValidGhanaPhone(data.phone) &&
+             isValidEmail(data.email);
     }
 
     function isValidSale(data) {
@@ -105,27 +120,37 @@ service cloud.firestore {
              (!('paymentReference' in data) || (data.paymentReference == null || (data.paymentReference is string && data.paymentReference.size() < 100)));
     }
 
+    function isValidSaleItem(data) {
+      return hasOnlyAllowedFields(['saleId', 'productId', 'userId', 'productName', 'quantity', 'price', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.quantity is int && data.quantity > 0 &&
+             data.price is number && data.price >= 0;
+    }
+
     // ===============================================================
     // Match Rules
     // ===============================================================
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
-      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
-      allow delete: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAdmin() || isOwner(userId);
     }
 
     match /products/{productId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create: if isManager() && isValidProduct(request.resource.data);
-      allow update: if isCashier() && (isValidProduct(request.resource.data) || isAdmin());
+      allow update: if isCashier() && (
+        isValidProduct(request.resource.data) || 
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']) && request.resource.data.quantity is int) ||
+        isAdmin()
+      );
       allow delete: if isAdmin();
     }
 
     match /customers/{customerId} {
-      allow read: if isAuthenticated();
-      allow create: if isCashier();
-      allow update: if isCashier();
+      allow read: if true;
+      allow create: if isCashier() && isValidCustomer(request.resource.data);
+      allow update: if isCashier() && isValidCustomer(request.resource.data);
       allow delete: if isManager();
     }
 
@@ -138,7 +163,7 @@ service cloud.firestore {
 
     match /sales_items/{itemId} {
       allow read: if true;
-      allow create: if isCashier();
+      allow create: if isCashier() && isValidSaleItem(request.resource.data);
       allow update: if isManager();
       allow delete: if isAdmin();
     }
@@ -151,7 +176,7 @@ service cloud.firestore {
     }
 
     match /suppliers/{supplierId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create: if isManager() && isValidSupplier(request.resource.data);
       allow update: if isManager() && isValidSupplier(request.resource.data);
       allow delete: if isAdmin();
