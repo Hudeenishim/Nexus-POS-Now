@@ -7,12 +7,13 @@
       "properties": {
         "uid": { "type": "string", "description": "Firebase Auth UID" },
         "name": { "type": "string" },
+        "username": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "phoneNumber": { "type": "string" },
         "role": { "type": "string", "enum": ["admin", "manager", "cashier"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["uid", "name", "email", "role"]
+      "required": ["uid", "name", "username", "email"]
     },
     "Product": {
       "title": "Product",
