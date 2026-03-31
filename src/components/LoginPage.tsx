@@ -108,8 +108,56 @@ export const LoginPage = () => {
       await signIn();
       setIsSuccess(true);
       toast.success('Welcome to Nexus POS');
-    } catch (error) {
-      toast.error('Login failed');
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      let message = 'Login failed';
+      try {
+        const parsed = JSON.parse(error.message);
+        if (parsed.error) message = `Login failed: ${parsed.error}`;
+      } catch (e) {
+        if (error.code === 'auth/popup-closed-by-user') {
+          message = 'Sign in cancelled';
+        } else if (error.code === 'auth/popup-blocked') {
+          message = 'Sign-in popup was blocked. Please allow popups for this site.';
+        } else if (error.code === 'auth/operation-not-allowed') {
+          message = 'Google sign-in is not enabled in Firebase Console.';
+        } else if (error.code === 'auth/unauthorized-domain') {
+          message = 'This domain is not authorized for Google sign-in. Please add it in Firebase Console.';
+        } else if (error.code === 'auth/network-request-failed') {
+          message = 'Network error. Please check your internet connection.';
+        } else if (error.code === 'auth/internal-error') {
+          message = 'An internal authentication error occurred. Please try again.';
+        } else if (error.code === 'auth/too-many-requests') {
+          message = 'Too many failed login attempts. Please try again later.';
+        } else if (error.code === 'auth/user-disabled') {
+          message = 'This user account has been disabled.';
+        } else if (error.code === 'auth/user-not-found') {
+          message = 'User not found.';
+        } else if (error.code === 'auth/wrong-password') {
+          message = 'Incorrect password.';
+        } else if (error.code === 'auth/invalid-email') {
+          message = 'Invalid email address.';
+        } else if (error.code === 'auth/email-already-in-use') {
+          message = 'This email is already in use.';
+        } else if (error.code === 'auth/weak-password') {
+          message = 'Password is too weak.';
+        } else if (error.code === 'auth/requires-recent-login') {
+          message = 'This action requires a recent login. Please log in again.';
+        } else if (error.code === 'auth/account-exists-with-different-credential') {
+          message = 'An account already exists with the same email address but different sign-in credentials.';
+        } else if (error.code === 'auth/auth-domain-config-required') {
+          message = 'Auth domain configuration is required. Please check your Firebase settings.';
+        } else if (error.code === 'auth/cancelled-popup-request') {
+          message = 'The sign-in popup was closed before completion.';
+        } else if (error.code === 'auth/user-token-expired') {
+          message = 'Your session has expired. Please log in again.';
+        } else if (error.code === 'auth/web-storage-unsupported') {
+          message = 'Web storage is not supported or is disabled in your browser.';
+        } else {
+          message = error.message || 'Login failed';
+        }
+      }
+      toast.error(message);
     }
   };
 
@@ -376,8 +424,8 @@ export const LoginPage = () => {
             </button>
           </form>
 
-          <div className="w-full border-t border-border/50 my-8"></div>
-          <div className="text-center mb-4">
+          <div className="mt-10 mb-6 flex flex-col items-center gap-6">
+            <div className="w-full border-t border-border/50" />
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-fg">Or continue with</span>
           </div>
 

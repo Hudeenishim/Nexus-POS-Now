@@ -81,8 +81,9 @@ service cloud.firestore {
       return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'phoneNumber', 'createdAt']) &&
              data.uid is string &&
              data.name is string &&
-             (data.email == "" || isValidEmail(data.email)) &&
-             (!('phoneNumber' in data) || isValidGhanaPhone(data.phoneNumber)) &&
+             data.email is string &&
+             (!('role' in data) || data.role in ['admin', 'manager', 'cashier']) &&
+             (!('phoneNumber' in data) || (data.phoneNumber is string && (data.phoneNumber == "" || isValidGhanaPhone(data.phoneNumber)))) &&
              data.createdAt is string;
     }
 

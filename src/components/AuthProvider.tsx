@@ -37,11 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: firebaseUser.email || '',
               createdAt: new Date().toISOString(),
             };
-            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-            setUser(newUser);
+            try {
+              await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+              setUser(newUser);
+            } catch (err) {
+              console.error('Error creating user in onAuthStateChanged:', err);
+            }
           }
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`, auth);
+          console.error('Error fetching user in onAuthStateChanged:', error);
         }
       } else {
         setUser(null);
@@ -57,8 +61,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsSigningIn(true);
     try {
       const provider = new GoogleAuthProvider();
-      // Ensure we don't hit "operation not allowed" by checking provider
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+      
+      // Check if user exists in Firestore
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      if (!userDoc.exists()) {
+        const newUser: User = {
+          uid: firebaseUser.uid,
+          name: firebaseUser.displayName || 'User',
+          email: firebaseUser.email || '',
+          createdAt: new Date().toISOString(),
+        };
+        try {
+          await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+          setUser(newUser);
+        } catch (error) {
+          console.error('Firestore error during Google sign in:', error);
+          handleFirestoreError(error, OperationType.CREATE, `users/${firebaseUser.uid}`, auth);
+        }
+      }
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
