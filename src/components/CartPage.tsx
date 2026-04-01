@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
+import {
   ShoppingCart, 
   Trash2, 
   Package, 
@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
 import { useCart } from './CartContext';
 import { db, auth } from '../firebase';
-import { 
+import {
   collection, 
   addDoc, 
   updateDoc, 
@@ -35,7 +35,7 @@ import { Receipt } from './Receipt';
 
 export const CartPage = () => {
   const { user } = useAuth();
-  const { cart, removeFromCart, updateQuantity, clearCart, subtotal, tax, total } = useCart();
+  const { cart, removeFromCart, updateQuantity, updateItemDiscount, cartDiscount, setCartDiscount, clearCart, subtotal, tax, total } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mtn_momo' | 'telecel_cash'>('cash');
   const [paymentPhone, setPaymentPhone] = useState(user?.phoneNumber || '');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -96,7 +96,7 @@ export const CartPage = () => {
         totalAmount: total,
         paymentMethod,
         paymentReference: paymentRef || null,
-        discount: 0,
+        discount: cartDiscount,
         tax,
         createdAt: new Date().toISOString()
       };
@@ -111,6 +111,7 @@ export const CartPage = () => {
           productName: item.product.name,
           quantity: item.quantity,
           price: item.product.price,
+          discount: item.discount,
           createdAt: new Date().toISOString()
         }).catch(e => handleFirestoreError(e, OperationType.CREATE, 'sales_items', auth));
 
@@ -206,7 +207,7 @@ export const CartPage = () => {
             <div className="divide-y divide-border/50">
               {cart.map((item) => (
                 <motion.div 
-                  key={item.product.id} 
+                  key={item.product.id}
                   layout
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -221,6 +222,17 @@ export const CartPage = () => {
                       <p className="text-xs sm:text-sm text-muted-fg font-bold uppercase tracking-widest opacity-60">{item.product.category}</p>
                       <span className="w-1 h-1 rounded-full bg-muted-fg/30" />
                       <p className="text-xs sm:text-sm font-black text-primary">{formatCurrency(item.product.price)}</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-60">Item Discount:</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.discount}
+                        onChange={(e) => updateItemDiscount(item.product.id, parseFloat(e.target.value) || 0)}
+                        className="w-20 bg-muted/50 border-border/50 rounded-lg px-2 py-1 text-xs font-bold focus:ring-1 focus:ring-primary outline-none"
+                      />
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-bg p-2 rounded-2xl border border-border/50 shadow-sm">
@@ -280,6 +292,21 @@ export const CartPage = () => {
               <div className="flex justify-between text-sm font-bold text-muted-fg">
                 <span className="uppercase tracking-widest opacity-60">Subtotal</span>
                 <span>{formatCurrency(subtotal)}</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm font-bold text-muted-fg">
+                  <span className="uppercase tracking-widest opacity-60">Cart Discount</span>
+                  <span className="text-red-500">-{formatCurrency(cartDiscount)}</span>
+                </div>
+                <input 
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={cartDiscount}
+                  onChange={(e) => setCartDiscount(parseFloat(e.target.value) || 0)}
+                  placeholder="Enter discount amount"
+                  className="w-full bg-muted/50 border-border/50 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                />
               </div>
               <div className="flex justify-between text-sm font-bold text-muted-fg">
                 <span className="uppercase tracking-widest opacity-60">Tax (8%)</span>
@@ -416,17 +443,15 @@ export const CartPage = () => {
                 <p className="text-muted-fg font-black uppercase tracking-[0.2em] text-xs">Transaction completed successfully</p>
               </div>
               <div className="pt-8 flex flex-col gap-4">
-                <Link 
-                  to="/pos"
+                <button 
                   onClick={() => setShowSuccessAnimation(false)}
                   className="btn btn-primary w-full py-5 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20"
                 >
                   New Transaction
-                </Link>
+                </button>
                 {lastSale && (
                   <button 
                     onClick={() => {
-                      // We'll keep lastSale set but close the animation
                       setShowSuccessAnimation(false);
                     }}
                     className="btn bg-muted/50 hover:bg-muted w-full py-5 rounded-2xl font-black uppercase tracking-widest text-sm border border-border/50"
@@ -443,9 +468,9 @@ export const CartPage = () => {
       <AnimatePresence>
         {lastSale && (
           <Receipt 
-            sale={lastSale.sale} 
-            items={lastSale.items} 
-            onClose={() => setLastSale(null)} 
+            sale={lastSale.sale}
+            items={lastSale.items}
+            onClose={() => setLastSale(null)}
           />
         )}
       </AnimatePresence>

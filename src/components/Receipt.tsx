@@ -19,19 +19,19 @@ export const ReceiptContent = ({ sale, items }: { sale: Sale; items: SaleItem[] 
 
       <div className="space-y-2 mb-6 text-xs text-black border-b border-black/10 pb-4">
         <div className="flex justify-between">
-          <span className="font-bold uppercase opacity-60">Date:</span> 
+          <span className="font-bold uppercase opacity-60">Date:</span>
           <span className="font-bold">{formatDate(sale.date)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="font-bold uppercase opacity-60">Invoice #:</span> 
+          <span className="font-bold uppercase opacity-60">Invoice #:</span>
           <span className="font-bold">{sale.id.toUpperCase().slice(0, 12)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="font-bold uppercase opacity-60">Method:</span> 
+          <span className="font-bold uppercase opacity-60">Method:</span>
           <span className="font-bold uppercase">{sale.paymentMethod.replace('_', ' ')}</span>
         </div>
         <div className="flex justify-between">
-          <span className="font-bold uppercase opacity-60">Cashier:</span> 
+          <span className="font-bold uppercase opacity-60">Cashier:</span>
           <span className="font-bold">{sale.userId.slice(-6).toUpperCase()}</span>
         </div>
       </div>
@@ -50,10 +50,13 @@ export const ReceiptContent = ({ sale, items }: { sale: Sale; items: SaleItem[] 
             <div className="col-span-3">
               <p className="font-black uppercase">{item.productName}</p>
               <p className="text-[10px] font-bold opacity-60">@{formatCurrency(item.price)}</p>
+              {item.discount > 0 && (
+                <p className="text-[9px] font-bold text-black/60 italic">Discount: -{formatCurrency(item.discount)}</p>
+              )}
             </div>
             <span className="text-center font-black">x{item.quantity}</span>
             <span className="col-span-2 text-right font-black">
-              {formatCurrency(item.price * item.quantity)}
+              {formatCurrency((item.price * item.quantity) - item.discount)}
             </span>
           </div>
         ))}
@@ -61,15 +64,21 @@ export const ReceiptContent = ({ sale, items }: { sale: Sale; items: SaleItem[] 
 
       <div className="border-t-2 border-dashed border-black pt-6 space-y-3 text-black">
         <div className="flex justify-between text-xs font-bold">
-          <span className="uppercase opacity-60">Subtotal:</span> 
-          <span>{formatCurrency(sale.totalAmount - sale.tax)}</span>
+          <span className="uppercase opacity-60">Subtotal:</span>
+          <span>{formatCurrency(sale.totalAmount - sale.tax + sale.discount)}</span>
         </div>
+        {sale.discount > 0 && (
+          <div className="flex justify-between text-xs font-bold">
+            <span className="uppercase opacity-60">Discount:</span>
+            <span>-{formatCurrency(sale.discount)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-xs font-bold">
-          <span className="uppercase opacity-60">Tax (8%):</span> 
+          <span className="uppercase opacity-60">Tax (8%):</span>
           <span>{formatCurrency(sale.tax)}</span>
         </div>
         <div className="flex justify-between text-xl font-black pt-4 border-t-2 border-black mt-2">
-          <span className="tracking-tighter">TOTAL:</span> 
+          <span className="tracking-tighter">TOTAL:</span>
           <span>{formatCurrency(sale.totalAmount)}</span>
         </div>
       </div>
@@ -83,9 +92,9 @@ export const ReceiptContent = ({ sale, items }: { sale: Sale; items: SaleItem[] 
         <div className="flex flex-col items-center gap-4">
           <div className="p-4 bg-white border-2 border-black rounded-xl">
             <QRCodeSVG 
-              value={`${window.location.origin}/print/${sale.id}`} 
-              size={140} 
-              level="H" 
+              value={`${window.location.origin}/print/${sale.id}`}
+              size={140}
+              level="H"
               includeMargin={false}
             />
           </div>
@@ -116,13 +125,13 @@ export const Receipt = ({ sale, items, onClose }: { sale: Sale; items: SaleItem[
         
         <div className="mt-8 flex gap-2 no-print relative z-20">
           <button 
-            onClick={() => window.print()} 
+            onClick={() => window.print()}
             className="flex-1 btn btn-primary py-3 font-bold"
           >
             Print
           </button>
           <button 
-            onClick={onClose} 
+            onClick={onClose}
             className="flex-1 btn btn-ghost border border-white/20 bg-white/10 backdrop-blur-md py-3 font-bold text-white hover:bg-white/20"
           >
             Close

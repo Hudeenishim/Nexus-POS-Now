@@ -16,7 +16,6 @@ export const PrintPage = () => {
   useEffect(() => {
     async function fetchData() {
       if (!saleId) return;
-      console.log('Fetching invoice data for:', saleId);
       try {
         const saleDoc = await getDoc(doc(db, 'sales', saleId)).catch(e => handleFirestoreError(e, OperationType.GET, `sales/${saleId}`, auth));
         if (saleDoc && saleDoc.exists()) {
@@ -24,13 +23,9 @@ export const PrintPage = () => {
           const itemsSnapshot = await getDocs(query(collection(db, 'sales_items'), where('saleId', '==', saleId))).catch(e => handleFirestoreError(e, OperationType.GET, 'sales_items', auth));
           const items = itemsSnapshot ? itemsSnapshot.docs.map(d => d.data() as SaleItem) : [];
           setData({ sale, items });
-          console.log('Invoice data loaded successfully');
-        } else {
-          console.warn('Invoice not found in Firestore');
         }
       } catch (error) {
         console.error('Error loading invoice:', error);
-        // toast.error('Failed to load invoice data'); // Removed to avoid potential issues in print view
       } finally {
         setLoading(false);
       }

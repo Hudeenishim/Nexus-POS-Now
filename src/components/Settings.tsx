@@ -9,8 +9,13 @@ import {
   Download, 
   FileSpreadsheet, 
   FileText, 
-  ShieldCheck 
+  ShieldCheck,
+  Share2,
+  Copy,
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { db } from '../firebase';
 import { useAuth } from './AuthProvider';
@@ -18,6 +23,12 @@ import { useAuth } from './AuthProvider';
 export const SettingsPage = () => {
   const { user } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
+  const SHARED_APP_URL = "https://ais-pre-ltj3euewlgsasykxa66scu-173886959417.europe-west3.run.app";
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(SHARED_APP_URL);
+    toast.success('Shared App URL copied to clipboard!');
+  };
 
   const handleExportData = async (format: 'json' | 'csv' | 'xlsx' = 'json') => {
     setIsExporting(true);
@@ -52,7 +63,6 @@ export const SettingsPage = () => {
         XLSX.writeFile(wb, `nexus_pos_backup_${new Date().toISOString().split('T')[0]}.xlsx`);
         toast.success('Data exported successfully as Excel');
       } else {
-        // Export Sales as CSV
         const sales = backupData['sales'];
         if (sales.length > 0) {
           const headers = Object.keys(sales[0]).join(',');
@@ -153,6 +163,60 @@ export const SettingsPage = () => {
                 <FileText size={18} />
                 {isExporting ? 'Exporting...' : 'Export Sales (CSV)'}
               </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="card space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
+              <Share2 size={24} />
+            </div>
+            <div>
+              <h3 className="font-bold">Public Access & Sharing</h3>
+              <p className="text-sm text-muted-fg">Share your app with other devices</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border-2 border-dashed border-border/50">
+              <div className="p-4 bg-white rounded-xl shadow-sm border border-border/20 mb-4">
+                <QRCodeSVG 
+                  value={SHARED_APP_URL} 
+                  size={160}
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-fg mb-2">Scan to Open App</p>
+              <div className="flex items-center gap-2 text-[10px] font-mono bg-muted/30 px-3 py-1.5 rounded-full border border-border/50 max-w-full overflow-hidden">
+                <span className="truncate opacity-60">{SHARED_APP_URL}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={handleCopyLink}
+                className="btn btn-outline gap-2 text-xs"
+              >
+                <Copy size={14} />
+                Copy Link
+              </button>
+              <a 
+                href={SHARED_APP_URL} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn btn-primary gap-2 text-xs"
+              >
+                <ExternalLink size={14} />
+                Open Shared
+              </a>
+            </div>
+
+            <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/10">
+              <p className="text-xs text-blue-600 leading-relaxed">
+                <strong>Note:</strong> Use this URL for scanning on other devices. The development URL is restricted and may be blocked by Safari/iOS.
+              </p>
             </div>
           </div>
         </div>

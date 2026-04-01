@@ -1,18 +1,27 @@
+/* Import Tailwind CSS base, components, and utilities */
 @import "tailwindcss";
 
+/* Define custom theme variables for fonts */
 @theme {
+  /* Set the default sans-serif font stack */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Set the default monospace font stack */
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+/* Base layer for global styles and print-specific overrides */
 @layer base {
+  /* Media query for print styles */
   @media print {
+    /* Hide all elements by default when printing */
     body * {
       visibility: hidden;
     }
+    /* Show only the receipt content and its children */
     #receipt-content, #receipt-content * {
       visibility: visible;
     }
+    /* Position the receipt content at the top-left for printing */
     #receipt-content {
       position: absolute;
       left: 0;
@@ -20,137 +29,226 @@
       width: 100%;
       margin: 0;
       padding: 0;
+      /* Remove shadows and borders for a clean print */
       box-shadow: none;
       border: none;
     }
+    /* Utility class to hide specific elements during printing */
     .no-print {
       display: none !important;
     }
   }
 }
 
+/* Root CSS variables for light theme colors and properties */
 :root {
+  /* Background color */
   --bg: #ffffff;
+  /* Foreground (text) color */
   --fg: #0f172a;
+  /* Muted background color for subtle elements */
   --muted: #f1f5f9;
+  /* Muted foreground color for less prominent text */
   --muted-fg: #64748b;
+  /* Primary brand color */
   --primary: #0f172a;
+  /* Text color to be used on top of primary background */
   --primary-fg: #ffffff;
+  /* Accent color for highlights and call-to-actions */
   --accent: #f59e0b;
+  /* Default border color */
   --border: #e2e8f0;
+  /* Background color for card-like elements */
   --card: #ffffff;
+  /* Default border radius for rounded elements */
   --radius: 0.875rem;
 }
 
+/* CSS variable overrides for dark theme */
 .dark {
+  /* Dark background color */
   --bg: #020617;
+  /* Light foreground (text) color */
   --fg: #f8fafc;
+  /* Darker muted background */
   --muted: #0f172a;
+  /* Darker muted foreground */
   --muted-fg: #94a3b8;
+  /* Light primary color for dark mode */
   --primary: #f8fafc;
+  /* Dark text color for primary background in dark mode */
   --primary-fg: #020617;
+  /* Same accent color for consistency */
   --accent: #f59e0b;
+  /* Darker border color */
   --border: #1e293b;
+  /* Darker card background */
   --card: #0f172a;
 }
 
+/* Global body styles */
 body {
+  /* Apply theme background color */
   background-color: var(--bg);
+  /* Apply theme text color */
   color: var(--fg);
+  /* Apply theme sans-serif font */
   font-family: var(--font-sans);
+  /* Smooth transition for theme switching */
   transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Enable font smoothing for better legibility */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Glassmorphism utility class */
 .glass {
+  /* Semi-transparent background mixed with theme background */
   background: color-mix(in srgb, var(--bg), transparent 20%);
+  /* Apply backdrop blur and saturation effects */
   backdrop-filter: blur(16px) saturate(180%);
+  /* Apply theme border */
   border: 1px solid var(--border);
 }
 
+/* Card component styles */
 .card {
+  /* Apply theme card background */
   background: var(--card);
+  /* Apply theme border */
   border: 1px solid var(--border);
+  /* Apply theme border radius */
   border-radius: var(--radius);
+  /* Add padding inside the card */
   padding: 1.5rem;
+  /* Add subtle shadow for depth */
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  /* Smooth transitions for hover effects */
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+/* Dark mode specific card shadow */
 .dark .card {
+  /* Stronger shadow for better visibility on dark backgrounds */
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
 }
 
+/* Base button styles */
 .btn {
+  /* Use flexbox for alignment */
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Apply theme border radius */
   border-radius: var(--radius);
+  /* Semi-bold font weight */
   font-weight: 600;
+  /* Vertical and horizontal padding */
   padding: 0.625rem 1.25rem;
+  /* Smooth transitions for all properties */
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Change cursor to pointer on hover */
   cursor: pointer;
+  /* Add gap between icon and text */
   gap: 0.5rem;
+  /* Small font size */
   font-size: 0.875rem;
 }
 
+/* Primary button variant */
 .btn-primary {
+  /* Apply primary theme colors */
   background: var(--primary);
   color: var(--primary-fg);
+  /* Add shadow for elevation */
   box-shadow: 0 4px 14px 0 rgb(0 0 0 / 0.1);
 }
 
+/* Hover effect for primary button */
 .btn-primary:hover {
+  /* Lift the button slightly */
   transform: translateY(-1px);
+  /* Increase shadow depth */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  /* Slightly fade the button */
   opacity: 0.95;
 }
 
+/* Active (click) effect for primary button */
 .btn-primary:active {
+  /* Return button to original position */
   transform: translateY(0);
 }
 
+/* Ghost button variant */
 .btn-ghost {
+  /* Transparent background */
   background: transparent;
+  /* Use default text color */
   color: var(--fg);
 }
 
+/* Hover effect for ghost button */
 .btn-ghost:hover {
+  /* Apply muted background on hover */
   background: var(--muted);
 }
 
+/* Base input field styles */
 .input {
+  /* Full width by default */
   width: 100%;
+  /* Apply theme background */
   background: var(--bg);
+  /* Apply theme border */
   border: 1px solid var(--border);
+  /* Apply theme border radius */
   border-radius: var(--radius);
+  /* Vertical and horizontal padding */
   padding: 0.75rem 1rem;
+  /* Remove default focus outline */
   outline: none;
+  /* Smooth transitions for all properties */
   transition: all 0.2s ease;
+  /* Small font size */
   font-size: 0.875rem;
 }
 
+/* Dark mode specific input background */
 .dark .input {
+  /* Use muted background for better contrast in dark mode */
   background: var(--muted);
 }
 
+/* Focus state for input fields */
 .input:focus {
+  /* Change border color to accent */
   border-color: var(--accent);
+  /* Add subtle glow effect using accent color */
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 85%);
 }
 
+/* Keyframes for a horizontal shaking animation */
 @keyframes shake {
+  /* Start and end at original position */
   0%, 100% { transform: translateX(0); }
+  /* Move left */
   25% { transform: translateX(-4px); }
+  /* Move right */
   75% { transform: translateX(4px); }
 }
 
+/* Utility class for applying the shake animation */
 .animate-shake {
+  /* Apply shake animation twice over 0.2 seconds */
   animation: shake 0.2s ease-in-out 0s 2;
 }
 
+/* Additional focus styles for inputs (overriding previous focus rule) */
 .input:focus {
+  /* Change border color to primary */
   border-color: var(--primary);
+  /* Add very subtle shadow */
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
 }
+

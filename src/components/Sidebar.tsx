@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Package, 
-  Truck, 
-  Users, 
-  BarChart3, 
-  Settings, 
-  ShieldCheck, 
-  X, 
-  Menu, 
-  LogOut 
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  Truck,
+  Users,
+  BarChart3,
+  Settings,
+  ShieldCheck,
+  X,
+  Menu,
+  LogOut
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from './AuthProvider';
@@ -40,7 +40,6 @@ export const Sidebar = ({ isOpen, setIsOpen, mobile }: { isOpen: boolean, setIsO
 
   return (
     <>
-      {/* Mobile Overlay */}
       {mobile && isOpen && (
         <motion.div 
           initial={{ opacity: 0 }}
@@ -72,7 +71,7 @@ export const Sidebar = ({ isOpen, setIsOpen, mobile }: { isOpen: boolean, setIsO
             </motion.div>
           )}
           <button 
-            onClick={() => setIsOpen(!isOpen)} 
+            onClick={() => setIsOpen(!isOpen)}
             className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-fg hover:text-fg"
           >
             {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -90,7 +89,7 @@ export const Sidebar = ({ isOpen, setIsOpen, mobile }: { isOpen: boolean, setIsO
                 className={cn(
                   "group relative flex items-center p-3.5 rounded-2xl transition-all duration-300",
                   isActive 
-                    ? "bg-primary text-primary-fg shadow-xl shadow-primary/10" 
+                    ? "bg-primary text-primary-fg shadow-xl shadow-primary/10"
                     : "hover:bg-muted text-muted-fg hover:text-fg"
                 )}
               >

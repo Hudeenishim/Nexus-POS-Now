@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { AlertCircle } from 'lucide-react';
 
-export class ErrorBoundary extends Component<any, any> {
+export default class ErrorBoundary extends Component<any, any> {
   constructor(props: any) {
     super(props);
     (this as any).state = { hasError: false, error: null };
@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<any, any> {
               <p className="text-muted-fg">{errorMessage}</p>
             </div>
             <button 
-              onClick={() => window.location.reload()} 
+              onClick={() => window.location.reload()}
               className="btn btn-primary w-full"
             >
               Reload Application

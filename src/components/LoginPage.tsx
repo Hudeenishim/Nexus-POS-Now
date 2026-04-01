@@ -188,7 +188,6 @@ export const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-bg">
-      {/* Left Side: Branding & Info (Hidden on Mobile) */}
       <div className="hidden md:flex md:w-1/2 bg-primary p-12 flex-col justify-between relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
@@ -218,7 +217,6 @@ export const LoginPage = () => {
         </div>
       </div>
 
-      {/* Right Side: Auth Form */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-12">
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
@@ -375,7 +373,7 @@ export const LoginPage = () => {
                 />
                 <button 
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => { setShowPassword(!showPassword); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -450,3 +448,4 @@ export const LoginPage = () => {
     </div>
   );
 };
+

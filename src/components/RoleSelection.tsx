@@ -75,7 +75,7 @@ export const RoleSelection = () => {
                 "relative flex flex-col items-center p-8 rounded-3xl border-2 transition-all text-center space-y-6",
                 selectedRole === role.id 
                   ? "border-primary bg-primary/5 shadow-2xl shadow-primary/10" 
-                  : "border-border/50 hover:border-primary/30 bg-muted/20"
+                  : "border-border/50 hover:border-primary/40 bg-muted/20"
               )}
             >
               <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner", role.bg, role.color)}>

@@ -44,8 +44,8 @@ export const Customers = () => {
     try {
       await addDoc(collection(db, 'customers'), { 
         ...newCustomer, 
-        loyaltyPoints: 0, 
-        createdAt: new Date().toISOString() 
+        loyaltyPoints: 0,
+        createdAt: new Date().toISOString()
       }).catch(e => handleFirestoreError(e, OperationType.CREATE, 'customers', auth));
       toast.success('Customer added');
       setShowAdd(false);
@@ -140,3 +140,4 @@ export const Customers = () => {
     </div>
   );
 };
+

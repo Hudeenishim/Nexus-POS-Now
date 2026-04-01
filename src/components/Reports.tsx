@@ -183,7 +183,14 @@ export const Reports = () => {
                     </div>
                     <div>
                       <p className="font-bold">{formatCurrency(sale.totalAmount)}</p>
-                      <p className="text-xs text-muted-fg">{formatDate(sale.date)}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-muted-fg">{formatDate(sale.date)}</p>
+                        {sale.discount > 0 && (
+                          <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-1.5 rounded uppercase tracking-widest">
+                            -{formatCurrency(sale.discount)} Disc
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-4">

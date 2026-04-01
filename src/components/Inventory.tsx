@@ -241,7 +241,6 @@ export const Inventory = () => {
         </div>
       </div>
 
-      {/* Add Product Modal */}
       <AnimatePresence>
         {showAddModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -359,7 +358,6 @@ export const Inventory = () => {
         )}
       </AnimatePresence>
 
-      {/* Edit Product Modal */}
       <AnimatePresence>
         {editingProduct && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -474,7 +472,6 @@ export const Inventory = () => {
         )}
       </AnimatePresence>
 
-      {/* QR Code Modal */}
       <AnimatePresence>
         {selectedProductForQR && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -527,3 +524,4 @@ export const Inventory = () => {
     </div>
   );
 };
+

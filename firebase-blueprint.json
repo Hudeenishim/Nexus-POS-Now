@@ -84,12 +84,14 @@
       "properties": {
         "saleId": { "type": "string" },
         "productId": { "type": "string" },
+        "productName": { "type": "string" },
         "userId": { "type": "string", "description": "ID of the user who made the sale" },
         "quantity": { "type": "integer" },
         "price": { "type": "number" },
+        "discount": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["saleId", "productId", "userId", "quantity", "price"]
+      "required": ["saleId", "productId", "userId", "quantity", "price", "discount"]
     },
     "InventoryLog": {
       "title": "InventoryLog",
