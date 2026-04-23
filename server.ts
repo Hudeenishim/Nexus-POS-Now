@@ -103,8 +103,10 @@ async function startServer() {
   });
 
   // Setup serving logic
-  if (process.env.NODE_ENV !== 'production' && !distExists) {
-    log("Development mode and dist missing: using Vite middleware...");
+  const isDev = process.env.NODE_ENV !== "production";
+  
+  if (isDev || !distExists) {
+    log(`${isDev ? "Dev mode" : "dist missing"}: using Vite middleware...`);
     try {
       const { createServer } = await import("vite");
       const vite = await createServer({
@@ -115,22 +117,13 @@ async function startServer() {
       log("Vite middleware attached.");
     } catch (e) {
       log(`Vite failed to start: ${e}`);
-      if (distExists) {
-        serveStaticDist(distPath);
-      } else {
-        app.get("*", (req, res) => {
-          res.status(500).send("Server Error: Vite failed to start and dist is missing.");
-        });
-      }
+      app.get("*", (req, res) => {
+        res.status(500).send("Server Error: Vite failed to start and dist is missing.");
+      });
     }
-  } else if (distExists) {
-    log("Serving static files from dist...");
-    serveStaticDist(distPath);
   } else {
-    log("CRITICAL ERROR: No dist and not in development mode (or Vite failed).");
-    app.get("*", (req, res) => {
-      res.status(500).send("Server Error: No static files found and Vite is unavailable.");
-    });
+    log("Production mode: Serving static files from dist...");
+    serveStaticDist(distPath);
   }
 
   app.listen(PORT, "0.0.0.0", () => {

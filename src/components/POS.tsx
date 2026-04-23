@@ -244,8 +244,8 @@ export const POS = () => {
                       type="number"
                       min="0"
                       step="0.01"
-                      value={item.discount}
-                      onChange={(e) => updateItemDiscount(item.product.id, parseFloat(e.target.value) || 0)}
+                      value={item.discount || 0}
+                      onChange={(e) => updateItemDiscount(item.product.id, Math.max(0, parseFloat(e.target.value) || 0))}
                       className="w-16 bg-bg border border-border/50 rounded px-1 py-0.5 text-[10px] font-bold focus:ring-1 focus:ring-primary outline-none"
                     />
                   </div>

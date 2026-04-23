@@ -92,7 +92,7 @@ export const ReceiptContent = ({ sale, items }: { sale: Sale; items: SaleItem[] 
         <div className="flex flex-col items-center gap-4">
           <div className="p-4 bg-white border-2 border-black rounded-xl">
             <QRCodeSVG 
-              value={`${window.location.origin}/print/${sale.id}`}
+              value={`${window.location.origin.replace('-dev-', '-pre-')}/print/${sale.id}`}
               size={140}
               level="H"
               includeMargin={false}

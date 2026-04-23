@@ -1,246 +1,143 @@
-// Specify the version of the security rules language
 rules_version = '2';
-// Define the service for which these rules apply (Cloud Firestore)
 service cloud.firestore {
-  // Match all documents within the database
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    // Collection: users
-    // Fields: uid (string), name (string), email (string), role (string), createdAt (timestamp)
-    //
-    // Collection: products
-    // Fields: name (string), category (string), price (number), quantity (int), barcode (string), lowStockThreshold (int), createdAt (timestamp)
-    //
-    // Collection: customers
-    // Fields: name (string), phone (string), email (string), address (string), loyaltyPoints (int), createdAt (timestamp)
-    //
-    // Collection: sales
-    // Fields: date (timestamp), userId (string), customerId (string), totalAmount (number), paymentMethod (string), discount (number), tax (number), createdAt (timestamp)
-    //
-    // Collection: sales_items
-    // Fields: saleId (string), productId (string), userId (string), quantity (int), price (number), createdAt (timestamp)
-    //
-    // Collection: inventory_logs
-    // Fields: productId (string), type (string), quantity (int), userId (string), createdAt (timestamp)
-    //
-    // Collection: suppliers
-    // Fields: name (string), contactPerson (string), phone (string), email (string), address (string), category (string), createdAt (timestamp)
-    // ===============================================================
+    // 0. Global Safety Net - Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
 
     // ===============================================================
     // Helper Functions
     // ===============================================================
-    // Check if the requesting user is authenticated
     function isAuthenticated() {
-      // Return true if the auth object exists in the request
       return request.auth != null;
     }
 
-    // Check if the requesting user is the owner of a specific resource
     function isOwner(userId) {
-      // Return true if authenticated and the auth UID matches the provided userId
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Check if the requesting user has the 'admin' role
+    // Master Admin check with fallback to user email
     function isAdmin() {
-      // Return true if authenticated and either matches the hardcoded admin email or has the 'admin' role in their user document
       return isAuthenticated() &&
-        ((request.auth.token.email == "salahnapari@gmail.com" && request.auth.token.email_verified == true) ||
+        (request.auth.token.email == "salahnapari@gmail.com" ||
          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
     }
 
-    // Check if the requesting user has the 'manager' role (or higher)
     function isManager() {
-      // For a "public" app, allow any authenticated user to act as a manager
-      return isAuthenticated();
+      return isAdmin() || (
+        isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager'
+      );
     }
 
-    // Check if the requesting user has the 'cashier' role (or higher)
     function isCashier() {
-      // For a "public" app, allow any authenticated user to act as a cashier
-      return isAuthenticated();
+      return isManager() || (
+        isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'cashier'
+      );
     }
 
-    // Check if the incoming data contains all required fields
-    function hasRequiredFields(fields) {
-      // Return true if the request resource data keys include all specified fields
-      return request.resource.data.keys().hasAll(fields);
-    }
-
-    // Check if the incoming data contains only the allowed fields
     function hasOnlyAllowedFields(fields) {
-      // Return true if the request resource data keys are limited to the specified fields
       return request.resource.data.keys().hasOnly(fields);
     }
 
-    // Validate the format of an email string
     function isValidEmail(email) {
-      // Use regex to check for a standard email pattern
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
-    // Validate the format of a Ghana phone number
     function isValidGhanaPhone(phone) {
-      // Use regex to check for a 10-digit Ghana phone number starting with 02, 03, or 05
       return phone is string && phone.matches("^0[235][0-9]{8}$");
     }
 
     // ===============================================================
     // Domain Validators
     // ===============================================================
-    // Validate the structure and data types of a user document
     function isValidUser(data) {
-      // Check for allowed fields and validate types/values for each field
-      return hasOnlyAllowedFields(['uid', 'name', 'username', 'email', 'role', 'phoneNumber', 'createdAt']) &&
-             data.uid is string &&
-             data.name is string &&
-             data.username is string &&
-             data.email is string &&
+      let allowedFields = ['uid', 'name', 'username', 'email', 'role', 'phoneNumber', 'createdAt'];
+      return hasOnlyAllowedFields(allowedFields) &&
              (!('role' in data) || data.role in ['admin', 'manager', 'cashier']) &&
-             (!('phoneNumber' in data) || (data.phoneNumber is string && (data.phoneNumber == "" || isValidGhanaPhone(data.phoneNumber)))) &&
-             data.createdAt is string;
+             // Only admins or the primary owner can set/update a role to 'admin'
+             (!('role' in data) || data.role != 'admin' || isAdmin() || request.auth.token.email == "salahnapari@gmail.com");
     }
 
-    // Validate the structure and data types of a customer document
+    function isValidProduct(data) {
+      let allowedFields = ['name', 'category', 'price', 'quantity', 'barcode', 'lowStockThreshold', 'supplierId', 'createdAt', 'updatedAt', 'id'];
+      return (request.method == 'create' ? hasOnlyAllowedFields(allowedFields) : true) &&
+             (!('name' in data) || (data.name is string && data.name.size() > 0 && data.name.size() < 200)) &&
+             (!('price' in data) || (data.price is number && data.price >= 0)) &&
+             (!('quantity' in data) || (data.quantity is number)) &&
+             (!('barcode' in data) || (data.barcode is string && data.barcode.size() > 0 && data.barcode.size() < 100)) &&
+             (!('lowStockThreshold' in data) || data.lowStockThreshold is number);
+    }
+
     function isValidCustomer(data) {
-      // Check for allowed fields and validate types/values for each field
-      return hasOnlyAllowedFields(['name', 'phone', 'email', 'address', 'loyaltyPoints', 'createdAt']) &&
+      let allowedFields = ['name', 'phone', 'email', 'address', 'loyaltyPoints', 'createdAt'];
+      return hasOnlyAllowedFields(allowedFields) &&
              data.name is string && data.name.size() > 0 &&
              isValidGhanaPhone(data.phone) &&
              (data.email == "" || isValidEmail(data.email)) &&
              data.loyaltyPoints is int;
     }
 
-    // Validate the structure and data types of a product document
-    function isValidProduct(data) {
-      // Check for allowed fields and validate types/values for each field
-      return hasOnlyAllowedFields(['name', 'category', 'price', 'quantity', 'barcode', 'lowStockThreshold', 'supplierId', 'createdAt', 'id']) &&
-             (!('name' in data) || (data.name is string && data.name.size() > 0 && data.name.size() < 200)) &&
-             (!('price' in data) || (data.price is number && data.price >= 0)) &&
-             (!('quantity' in data) || (data.quantity is int)) &&
-             (!('barcode' in data) || (data.barcode is string && data.barcode.size() > 0 && data.barcode.size() < 100)) &&
-             (!('lowStockThreshold' in data) || data.lowStockThreshold is int) &&
-             (!('supplierId' in data) || data.supplierId is string);
-    }
-
-    // Validate the structure and data types of a supplier document
-    function isValidSupplier(data) {
-      // Check for allowed fields and validate types/values for each field
-      return hasOnlyAllowedFields(['name', 'contactPerson', 'phone', 'email', 'address', 'category', 'createdAt']) &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
-             data.contactPerson is string && data.contactPerson.size() > 0 && data.contactPerson.size() < 100 &&
-             isValidGhanaPhone(data.phone) &&
-             (data.email == "" || isValidEmail(data.email));
-    }
-
-    // Validate the structure and data types of a sale document
     function isValidSale(data) {
-      // Check for allowed fields and validate types/values for each field
-      return hasOnlyAllowedFields(['date', 'userId', 'customerId', 'totalAmount', 'paymentMethod', 'paymentReference', 'discount', 'tax', 'createdAt']) &&
+      let allowedFields = ['date', 'userId', 'customerId', 'totalAmount', 'paymentMethod', 'paymentReference', 'discount', 'tax', 'createdAt'];
+      return hasOnlyAllowedFields(allowedFields) &&
              data.userId == request.auth.uid &&
-             data.totalAmount is number && data.totalAmount >= 0 &&
-             data.paymentMethod in ['cash', 'card', 'mobile_money', 'mtn_momo', 'telecel_cash'] &&
-             (!('paymentReference' in data) || (data.paymentReference == null || (data.paymentReference is string && data.paymentReference.size() < 100)));
-    }
-
-    // Validate the structure and data types of a sale item document
-    function isValidSaleItem(data) {
-      // Check for allowed fields and validate types/values for each field
-      return hasOnlyAllowedFields(['saleId', 'productId', 'userId', 'productName', 'quantity', 'price', 'discount', 'createdAt']) &&
-             data.userId == request.auth.uid &&
-             data.quantity is int && data.quantity > 0 &&
-             data.price is number && data.price >= 0 &&
-             data.discount is number && data.discount >= 0;
+             data.totalAmount is number && data.totalAmount >= 0;
     }
 
     // ===============================================================
     // Match Rules
     // ===============================================================
-    // Rules for the 'users' collection
     match /users/{userId} {
-      // Allow any authenticated user to read user profiles
       allow read: if isAuthenticated();
-      // Allow a user to create their own profile if it's valid
       allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      // Allow admins or the owner to update a user profile
-      allow update: if isAdmin() || isOwner(userId);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
     }
 
-    // Rules for the 'products' collection
     match /products/{productId} {
-      // Allow anyone to read product information
-      allow read: if true;
-      // Allow managers to create new products if they are valid
+      allow read: if isAuthenticated();
       allow create: if isManager() && isValidProduct(request.resource.data);
-      // Allow managers to update products, or cashiers to update only the quantity field
-      allow update: if (isManager() && isValidProduct(request.resource.data)) || 
-                    (isCashier() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']) && request.resource.data.quantity is int);
-      // Only allow admins to delete products
-      allow delete: if isAdmin();
+      allow update: if isAdmin() || (isManager() && isValidProduct(request.resource.data)) || (isCashier() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']) && request.resource.data.quantity is number);
+      allow delete: if isAdmin() || isManager();
     }
 
-    // Rules for the 'customers' collection
     match /customers/{customerId} {
-      // Allow anyone to read customer information
-      allow read: if true;
-      // Allow cashiers to create new customers if they are valid
+      allow read: if isAuthenticated();
       allow create: if isCashier() && isValidCustomer(request.resource.data);
-      // Allow cashiers to update customer information
       allow update: if isCashier() && isValidCustomer(request.resource.data);
-      // Only allow managers to delete customers
-      allow delete: if isManager();
+      allow delete: if isAdmin() || isManager();
     }
 
-    // Rules for the 'sales' collection
     match /sales/{saleId} {
-      // Allow anyone to read sale records
-      allow read: if true;
-      // Allow cashiers to create new sale records if they are valid
+      allow read: if isAuthenticated();
       allow create: if isCashier() && isValidSale(request.resource.data);
-      // Only allow managers to update sale records
-      allow update: if isManager();
-      // Only allow admins to delete sale records
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || isManager();
+      allow update: if false; // Sales are immutable
     }
 
-    // Rules for the 'sales_items' collection
     match /sales_items/{itemId} {
-      // Allow anyone to read sale item records
-      allow read: if true;
-      // Allow cashiers to create new sale item records if they are valid
-      allow create: if isCashier() && isValidSaleItem(request.resource.data);
-      // Only allow managers to update sale item records
-      allow update: if isManager();
-      // Only allow admins to delete sale item records
-      allow delete: if isAdmin();
-    }
-
-    // Rules for the 'inventory_logs' collection
-    match /inventory_logs/{logId} {
-      // Only allow managers to read inventory logs
-      allow read: if isManager();
-      // Allow cashiers to create new inventory logs
+      allow read: if isAuthenticated();
       allow create: if isCashier();
-      // Prevent any updates to inventory logs
+      allow delete: if isAdmin() || isManager();
       allow update: if false;
-      // Prevent any deletions of inventory logs
-      allow delete: if false;
     }
 
-    // Rules for the 'suppliers' collection
     match /suppliers/{supplierId} {
-      // Allow anyone to read supplier information
-      allow read: if true;
-      // Allow managers to create new suppliers if they are valid
-      allow create: if isManager() && isValidSupplier(request.resource.data);
-      // Allow managers to update supplier information
-      allow update: if isManager() && isValidSupplier(request.resource.data);
-      // Only allow admins to delete suppliers
-      allow delete: if isAdmin();
+      allow read: if isAuthenticated();
+      allow create: if isManager();
+      allow update: if isManager();
+      allow delete: if isAdmin() || isManager();
+    }
+
+    match /inventory_logs/{logId} {
+      allow read: if isManager();
+      allow create: if isCashier();
     }
   }
 }

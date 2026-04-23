@@ -54,7 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           // If the profile exists, update the local user state
           if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
+            const userData = userDoc.data() as User;
+            // Force admin role for the primary owner email if not already set
+            if (firebaseUser.email === 'salahnapari@gmail.com' && userData.role !== 'admin') {
+              const updatedUser = { ...userData, role: 'admin' as const };
+              await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
+              setUser(updatedUser);
+            } else {
+              setUser(userData);
+            }
           } else {
             // If no profile exists, create a new user object
             const newUser: User = {
@@ -62,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               name: firebaseUser.displayName || 'User',
               username: firebaseUser.displayName || 'user_' + firebaseUser.uid.slice(0, 5),
               email: firebaseUser.email || '',
+              role: firebaseUser.email === 'salahnapari@gmail.com' ? 'admin' : undefined,
               createdAt: new Date().toISOString(),
             };
             try {

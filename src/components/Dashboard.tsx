@@ -317,7 +317,7 @@ export const Dashboard = () => {
 
               <div className="bg-white p-8 rounded-3xl inline-block mx-auto shadow-inner border border-border/50">
                 <QRCodeSVG 
-                  value={window.location.origin} 
+                  value={window.location.origin.replace('-dev-', '-pre-')} 
                   size={200}
                   level="H"
                   includeMargin={true}

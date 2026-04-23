@@ -19,13 +19,21 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { auth, db } from '../firebase';
+import { useAuth } from './AuthProvider';
 import { Supplier } from '../types';
 import { handleFirestoreError, isValidGhanaPhone, isValidEmail, OperationType } from '../lib/utils';
+import { ConfirmModal } from './ConfirmModal';
 
 export const Suppliers = () => {
+  const { user } = useAuth();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: '',
+  });
   const [newSupplier, setNewSupplier] = useState({
     name: '',
     contactPerson: '',
@@ -135,9 +143,11 @@ export const Suppliers = () => {
                 >
                   <Settings size={18} />
                 </button>
-                <button onClick={() => handleDelete(supplier.id)} className="p-2 hover:bg-red-500/10 rounded-xl text-muted-fg hover:text-red-500 transition-colors">
-                  <Trash2 size={18} />
-                </button>
+                {(user?.role === 'admin' || user?.role === 'manager' || user?.email === 'salahnapari@gmail.com') && (
+                  <button onClick={() => setDeleteConfirmation({ isOpen: true, id: supplier.id, name: supplier.name })} className="p-2 hover:bg-red-500/10 rounded-xl text-muted-fg hover:text-red-500 transition-colors">
+                    <Trash2 size={18} />
+                  </button>
+                )}
               </div>
             </div>
             
@@ -206,6 +216,25 @@ export const Suppliers = () => {
           </div>
         )}
       </AnimatePresence>
+      <ConfirmModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}
+        title="Delete Supplier"
+        message={`Are you sure you want to delete ${deleteConfirmation.name}? This might affect products linked to this supplier.`}
+        confirmText="Delete Supplier"
+        isDestructive={true}
+        onConfirm={async () => {
+          try {
+            await deleteDoc(doc(db, 'suppliers', deleteConfirmation.id)).catch(e => handleFirestoreError(e, OperationType.DELETE, `suppliers/${deleteConfirmation.id}`, auth));
+            toast.success('Supplier deleted');
+          } catch (error) {
+            console.error(error);
+            if (!(error instanceof Error && error.message.startsWith('{'))) {
+              toast.error('Failed to delete supplier');
+            }
+          }
+        }}
+      />
     </div>
   );
 };

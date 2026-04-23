@@ -7,13 +7,16 @@ import {
   onSnapshot, 
   limit, 
   where, 
-  getDocs 
+  getDocs,
+  deleteDoc,
+  doc 
 } from 'firebase/firestore';
 import { 
   TrendingUp, 
   Package, 
   AlertCircle, 
   ShoppingCart, 
+  Trash2,
   FileText 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -32,6 +35,7 @@ import { useAuth } from './AuthProvider';
 import { Sale, Product, SaleItem } from '../types';
 import { cn, formatCurrency, formatDate, handleFirestoreError, OperationType } from '../lib/utils';
 import { Receipt } from './Receipt';
+import { ConfirmModal } from './ConfirmModal';
 
 export const Reports = () => {
   const { user } = useAuth();
@@ -39,6 +43,10 @@ export const Reports = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSale, setSelectedSale] = useState<{ sale: Sale; items: SaleItem[] } | null>(null);
+  const [voidConfirmation, setVoidConfirmation] = useState<{ isOpen: boolean; saleId: string }>({
+    isOpen: false,
+    saleId: '',
+  });
 
   const viewReceipt = async (sale: Sale) => {
     try {
@@ -198,13 +206,24 @@ export const Reports = () => {
                       <p className="text-xs font-bold uppercase text-accent">{sale.paymentMethod.replace('_', ' ')}</p>
                       <p className="text-[10px] text-muted-fg">ID: {sale.id.slice(-6).toUpperCase()}</p>
                     </div>
-                    <button 
-                      onClick={() => viewReceipt(sale)}
-                      className="btn btn-ghost btn-sm gap-2"
-                    >
-                      <FileText size={16} />
-                      <span className="hidden sm:inline">View Receipt</span>
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => viewReceipt(sale)}
+                        className="btn btn-ghost btn-sm gap-2"
+                      >
+                        <FileText size={16} />
+                        <span className="hidden sm:inline">View Receipt</span>
+                      </button>
+                      {(user?.role === 'admin' || user?.role === 'manager' || user?.email === 'salahnapari@gmail.com') && (
+                        <button 
+                          onClick={() => setVoidConfirmation({ isOpen: true, saleId: sale.id })}
+                          className="btn btn-ghost btn-sm text-red-500 hover:bg-red-500/10"
+                        >
+                          <Trash2 size={16} />
+                          <span className="hidden sm:inline">Void</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -254,6 +273,25 @@ export const Reports = () => {
           />
         )}
       </AnimatePresence>
+      <ConfirmModal
+        isOpen={voidConfirmation.isOpen}
+        onClose={() => setVoidConfirmation({ ...voidConfirmation, isOpen: false })}
+        title="Void Transaction"
+        message="Are you sure you want to void this transaction? This action is irreversible and will remove the record from your reports."
+        confirmText="Void Transaction"
+        isDestructive={true}
+        onConfirm={async () => {
+          try {
+            await deleteDoc(doc(db, 'sales', voidConfirmation.saleId)).catch(e => handleFirestoreError(e, OperationType.DELETE, `sales/${voidConfirmation.saleId}`, auth));
+            toast.success('Transaction voided');
+          } catch (error) {
+            console.error(error);
+            if (!(error instanceof Error && error.message.startsWith('{'))) {
+              toast.error('Failed to void transaction');
+            }
+          }
+        }}
+      />
     </div>
   );
 };

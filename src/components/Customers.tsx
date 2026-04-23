@@ -5,23 +5,34 @@ import {
   collection, 
   orderBy, 
   onSnapshot, 
-  addDoc 
+  addDoc,
+  deleteDoc,
+  doc 
 } from 'firebase/firestore';
 import { 
   Plus, 
   Smartphone, 
-  Settings 
+  Settings,
+  Trash2 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { auth, db } from '../firebase';
+import { useAuth } from './AuthProvider';
 import { Customer } from '../types';
 import { handleFirestoreError, isValidGhanaPhone, isValidEmail, OperationType } from '../lib/utils';
+import { ConfirmModal } from './ConfirmModal';
 
 export const Customers = () => {
+  const { user } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '', address: '' });
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: '',
+  });
 
   useEffect(() => {
     const q = query(collection(db, 'customers'), orderBy('createdAt', 'desc'));
@@ -93,9 +104,19 @@ export const Customers = () => {
                   <span className="text-xl font-black tracking-tighter text-accent">{customer.loyaltyPoints}</span>
                 </div>
               </div>
-              <button className="p-2 hover:bg-muted rounded-xl text-muted-fg hover:text-primary transition-colors">
-                <Settings size={18} />
-              </button>
+              <div className="flex gap-1">
+                <button className="p-2 hover:bg-muted rounded-xl text-muted-fg hover:text-primary transition-colors">
+                  <Settings size={18} />
+                </button>
+                {(user?.role === 'admin' || user?.role === 'manager' || user?.email === 'salahnapari@gmail.com') && (
+                  <button 
+                    onClick={() => setDeleteConfirmation({ isOpen: true, id: customer.id, name: customer.name })}
+                    className="p-2 hover:bg-red-500/10 rounded-xl text-muted-fg hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         ))}
@@ -137,6 +158,25 @@ export const Customers = () => {
           </div>
         )}
       </AnimatePresence>
+      <ConfirmModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}
+        title="Delete Customer"
+        message={`Are you sure you want to delete ${deleteConfirmation.name}? This will remove all their loyalty data.`}
+        confirmText="Delete"
+        isDestructive={true}
+        onConfirm={async () => {
+          try {
+            await deleteDoc(doc(db, 'customers', deleteConfirmation.id)).catch(e => handleFirestoreError(e, OperationType.DELETE, `customers/${deleteConfirmation.id}`, auth));
+            toast.success('Customer deleted');
+          } catch (error) {
+            console.error(error);
+            if (!(error instanceof Error && error.message.startsWith('{'))) {
+              toast.error('Failed to delete customer');
+            }
+          }
+        }}
+      />
     </div>
   );
 };

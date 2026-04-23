@@ -229,8 +229,8 @@ export const CartPage = () => {
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.discount}
-                        onChange={(e) => updateItemDiscount(item.product.id, parseFloat(e.target.value) || 0)}
+                        value={item.discount || 0}
+                        onChange={(e) => updateItemDiscount(item.product.id, Math.max(0, parseFloat(e.target.value) || 0))}
                         className="w-20 bg-muted/50 border-border/50 rounded-lg px-2 py-1 text-xs font-bold focus:ring-1 focus:ring-primary outline-none"
                       />
                     </div>
@@ -302,8 +302,8 @@ export const CartPage = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={cartDiscount}
-                  onChange={(e) => setCartDiscount(parseFloat(e.target.value) || 0)}
+                  value={cartDiscount || 0}
+                  onChange={(e) => setCartDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
                   placeholder="Enter discount amount"
                   className="w-full bg-muted/50 border-border/50 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 />

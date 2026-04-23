@@ -29,6 +29,8 @@ import { useAuth } from './AuthProvider';
 import { Product, Supplier } from '../types';
 import { cn, formatCurrency, handleFirestoreError, OperationType } from '../lib/utils';
 
+import { ConfirmModal } from './ConfirmModal';
+
 export const Inventory = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
@@ -36,6 +38,11 @@ export const Inventory = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedProductForQR, setSelectedProductForQR] = useState<Product | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; productId: string; productName: string }>({
+    isOpen: false,
+    productId: '',
+    productName: '',
+  });
   const [filter, setFilter] = useState<'all' | 'low'>('all');
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -86,8 +93,23 @@ export const Inventory = () => {
     e.preventDefault();
     if (!editingProduct) return;
     try {
-      const { id, ...data } = editingProduct;
-      await updateDoc(doc(db, 'products', id), data).catch(e => handleFirestoreError(e, OperationType.UPDATE, `products/${id}`, auth));
+      // Explicitly pick only the allowed fields to avoid sending extra data that might violate security rules
+      const data = {
+        name: editingProduct.name,
+        category: editingProduct.category,
+        price: editingProduct.price,
+        quantity: editingProduct.quantity,
+        barcode: editingProduct.barcode,
+        lowStockThreshold: editingProduct.lowStockThreshold,
+        supplierId: editingProduct.supplierId || '',
+        updatedAt: new Date().toISOString(),
+        id: editingProduct.id // Include ID if the rule expects it, or ignore if not
+      };
+      
+      // Remove id from the payload as we use it for the doc reference
+      const { id, ...updateData } = data;
+      
+      await updateDoc(doc(db, 'products', id), updateData).catch(e => handleFirestoreError(e, OperationType.UPDATE, `products/${id}`, auth));
       toast.success('Product updated successfully');
       setEditingProduct(null);
     } catch (error) {
@@ -181,7 +203,7 @@ export const Inventory = () => {
                             "h-full transition-all duration-500",
                             product.quantity <= product.lowStockThreshold ? "bg-red-500" : "bg-green-500"
                           )}
-                          style={{ width: `${Math.min(100, (product.quantity / (product.lowStockThreshold * 3)) * 100)}%` }}
+                          style={{ width: `${Math.min(100, (product.quantity / (Math.max(1, product.lowStockThreshold) * 3)) * 100) || 0}%` }}
                         />
                       </div>
                     </div>
@@ -213,19 +235,9 @@ export const Inventory = () => {
                       >
                         <Edit3 size={18} />
                       </button>
-                      {(user?.role === 'admin' || user?.role === 'manager') && (
+                      {(user?.role === 'admin' || user?.role === 'manager' || user?.email === 'salahnapari@gmail.com') && (
                         <button 
-                          onClick={async () => {
-                            if (window.confirm(`Are you sure you want to delete ${product.name}?`)) {
-                              try {
-                                await deleteDoc(doc(db, 'products', product.id)).catch(e => handleFirestoreError(e, OperationType.DELETE, `products/${product.id}`, auth));
-                                toast.success('Product deleted successfully');
-                              } catch (error) {
-                                console.error(error);
-                                toast.error('Failed to delete product');
-                              }
-                            }
-                          }}
+                          onClick={() => setDeleteConfirmation({ isOpen: true, productId: product.id, productName: product.name })}
                           className="p-2 rounded-xl bg-bg border border-border text-muted-fg hover:text-red-500 hover:border-red-500 transition-all hover:scale-110"
                           title="Delete Product"
                         >
@@ -301,7 +313,7 @@ export const Inventory = () => {
                       required 
                       className="input" 
                       value={newProduct.price}
-                      onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
+                      onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -311,7 +323,7 @@ export const Inventory = () => {
                       required 
                       className="input" 
                       value={newProduct.quantity}
-                      onChange={(e) => setNewProduct({ ...newProduct, quantity: parseInt(e.target.value) })}
+                      onChange={(e) => setNewProduct({ ...newProduct, quantity: parseInt(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -332,7 +344,7 @@ export const Inventory = () => {
                       required 
                       className="input" 
                       value={newProduct.lowStockThreshold}
-                      onChange={(e) => setNewProduct({ ...newProduct, lowStockThreshold: parseInt(e.target.value) })}
+                      onChange={(e) => setNewProduct({ ...newProduct, lowStockThreshold: parseInt(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
@@ -416,7 +428,7 @@ export const Inventory = () => {
                       required 
                       className="input" 
                       value={editingProduct.price}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -426,7 +438,7 @@ export const Inventory = () => {
                       required 
                       className="input" 
                       value={editingProduct.quantity}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, quantity: parseInt(e.target.value) })}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, quantity: parseInt(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -446,7 +458,7 @@ export const Inventory = () => {
                       required 
                       className="input" 
                       value={editingProduct.lowStockThreshold}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, lowStockThreshold: parseInt(e.target.value) })}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, lowStockThreshold: parseInt(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
@@ -521,6 +533,25 @@ export const Inventory = () => {
           </div>
         )}
       </AnimatePresence>
+      <ConfirmModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}
+        title="Delete Product"
+        message={`Are you sure you want to delete ${deleteConfirmation.productName}? This action cannot be undone.`}
+        confirmText="Delete Product"
+        isDestructive={true}
+        onConfirm={async () => {
+          try {
+            await deleteDoc(doc(db, 'products', deleteConfirmation.productId)).catch(e => handleFirestoreError(e, OperationType.DELETE, `products/${deleteConfirmation.productId}`, auth));
+            toast.success('Product deleted successfully');
+          } catch (error) {
+            console.error(error);
+            if (!(error instanceof Error && error.message.startsWith('{'))) {
+              toast.error('Failed to delete product');
+            }
+          }
+        }}
+      />
     </div>
   );
 };
