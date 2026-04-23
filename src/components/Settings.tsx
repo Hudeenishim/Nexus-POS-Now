@@ -46,7 +46,7 @@ export const SettingsPage = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `nexus_pos_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `mayback_pos_backup_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         toast.success('Data exported successfully as JSON');
       } else if (format === 'xlsx') {
@@ -60,7 +60,7 @@ export const SettingsPage = () => {
           }
         }
         
-        XLSX.writeFile(wb, `nexus_pos_backup_${new Date().toISOString().split('T')[0]}.xlsx`);
+        XLSX.writeFile(wb, `mayback_pos_backup_${new Date().toISOString().split('T')[0]}.xlsx`);
         toast.success('Data exported successfully as Excel');
       } else {
         const sales = backupData['sales'];
@@ -72,7 +72,7 @@ export const SettingsPage = () => {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `nexus_sales_export_${new Date().toISOString().split('T')[0]}.csv`;
+          a.download = `mayback_sales_export_${new Date().toISOString().split('T')[0]}.csv`;
           a.click();
           toast.success('Sales data exported as CSV');
         } else {

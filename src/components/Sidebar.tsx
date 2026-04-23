@@ -66,7 +66,7 @@ export const Sidebar = ({ isOpen, setIsOpen, mobile }: { isOpen: boolean, setIsO
                 <ShieldCheck size={24} />
               </div>
               <h1 className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-fg to-muted-fg">
-                NEXUS
+                MAYBACK
               </h1>
             </motion.div>
           )}

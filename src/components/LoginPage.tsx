@@ -107,7 +107,7 @@ export const LoginPage = () => {
     try {
       await signIn();
       setIsSuccess(true);
-      toast.success('Welcome to Nexus POS');
+      toast.success('Welcome to Mayback');
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         console.error('Google login error:', error);
@@ -196,8 +196,8 @@ export const LoginPage = () => {
         
         <div className="relative z-10">
           <div className="flex items-center gap-3 text-primary-fg mb-12">
-            <div className="w-10 h-10 bg-primary-fg text-primary rounded-xl flex items-center justify-center font-black text-xl">N</div>
-            <span className="text-2xl font-black tracking-tighter">NEXUS POS</span>
+            <div className="w-10 h-10 bg-primary-fg text-primary rounded-xl flex items-center justify-center font-black text-xl">M</div>
+            <span className="text-2xl font-black tracking-tighter">MAYBACK</span>
           </div>
           
           <div className="space-y-6 max-w-lg">
@@ -224,8 +224,8 @@ export const LoginPage = () => {
           className="max-w-md w-full space-y-8"
         >
           <div className="md:hidden flex items-center gap-3 mb-12">
-            <div className="w-8 h-8 bg-primary text-primary-fg rounded-lg flex items-center justify-center font-black text-lg">N</div>
-            <span className="text-xl font-black tracking-tighter">NEXUS</span>
+            <div className="w-8 h-8 bg-primary text-primary-fg rounded-lg flex items-center justify-center font-black text-lg">M</div>
+            <span className="text-xl font-black tracking-tighter">MAYBACK</span>
           </div>
 
           <div className="space-y-2 h-[72px] flex flex-col justify-end">
@@ -241,7 +241,7 @@ export const LoginPage = () => {
                   {isSignUp ? 'Create an account' : 'Welcome back'}
                 </h2>
                 <p className="text-muted-fg font-medium mt-1">
-                  {isSignUp ? 'Join the Nexus ecosystem today.' : 'Enter your credentials to access your account.'}
+                  {isSignUp ? 'Join the Mayback ecosystem today.' : 'Enter your credentials to access your account.'}
                 </p>
               </motion.div>
             </AnimatePresence>

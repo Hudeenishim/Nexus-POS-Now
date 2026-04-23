@@ -60,7 +60,7 @@ export const CartPage = () => {
           amount: Math.round(total * 100),
           currency: 'GHS',
           channels: ['mobile_money'],
-          ref: `nexus_${Date.now()}`,
+          ref: `mayback_${Date.now()}`,
           metadata: {
             custom_fields: [
               { display_name: "Customer Name", variable_name: "customer_name", value: user.name },

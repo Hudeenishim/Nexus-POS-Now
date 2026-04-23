@@ -1,6 +1,6 @@
-# Nexus POS - Modern Point of Sale System
+# Mayback POS - Modern Point of Sale System
 
-Nexus POS is a full-stack Point of Sale (POS) application designed for modern businesses. It features a robust inventory management system, real-time sales tracking, customer loyalty management, and a sleek, responsive user interface.
+Mayback POS is a full-stack Point of Sale (POS) application designed for modern businesses. It features a robust inventory management system, real-time sales tracking, customer loyalty management, and a sleek, responsive user interface.
 
 ## Features
 

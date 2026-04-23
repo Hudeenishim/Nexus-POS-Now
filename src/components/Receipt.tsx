@@ -11,7 +11,7 @@ export const ReceiptContent = ({ sale, items }: { sale: Sale; items: SaleItem[] 
       id="receipt-content"
     >
       <div className="text-center space-y-2 border-b-2 border-dashed border-black pb-6 mb-6">
-        <h2 className="text-3xl font-black uppercase tracking-tighter text-black">NEXUS POS</h2>
+        <h2 className="text-3xl font-black uppercase tracking-tighter text-black">MAYBACK POS</h2>
         <p className="text-sm font-bold text-black">OFFICIAL INVOICE</p>
         <p className="text-[10px] text-black">123 Innovation Drive, Tech City</p>
         <p className="text-[10px] text-black">Tel: +1 234 567 890</p>

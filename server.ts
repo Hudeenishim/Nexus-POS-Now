@@ -40,9 +40,9 @@ app.use((req, res, next) => {
 });
 
 // API Route for testing server availability
-app.get("/test-nexus", (req, res) => {
+app.get("/test-mayback", (req, res) => {
   // Send a simple string response confirming the server is alive
-  res.send("NEXUS SERVER IS ALIVE");
+  res.send("MAYBACK SERVER IS ALIVE");
 });
 
 // API Route for checking the health and timestamp of the server
@@ -98,8 +98,8 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString(), env: process.env.NODE_ENV });
   });
 
-  app.get("/test-nexus", (req, res) => {
-    res.send("NEXUS SERVER IS ALIVE");
+  app.get("/test-mayback", (req, res) => {
+    res.send("MAYBACK SERVER IS ALIVE");
   });
 
   // Setup serving logic

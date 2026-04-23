@@ -125,7 +125,7 @@ const LoadingFallback = () => (
       {/* Animated spinner element */}
       <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       {/* Loading text with pulse animation */}
-      <p className="text-sm font-black tracking-widest uppercase opacity-50 animate-pulse">Initializing Nexus...</p>
+      <p className="text-sm font-black tracking-widest uppercase opacity-50 animate-pulse">Initializing Mayback...</p>
     </div>
   </div>
 );
@@ -135,7 +135,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   // Access user authentication state and loading status
   const { user, loading } = useAuth();
   // Show a simple loading indicator while auth state is being determined
-  if (loading) return <div className="h-screen flex items-center justify-center font-bold tracking-tighter text-2xl animate-pulse">NEXUS</div>;
+  if (loading) return <div className="h-screen flex items-center justify-center font-bold tracking-tighter text-2xl animate-pulse">MAYBACK</div>;
   // Redirect to login if the user is not authenticated
   if (!user) return <Navigate to="/login" />;
   // Show role selection if the user hasn't chosen a role yet

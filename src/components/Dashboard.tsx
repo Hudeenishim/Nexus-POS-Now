@@ -356,7 +356,7 @@ export const Dashboard = () => {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowHelp(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="card max-w-lg w-full relative z-10 space-y-6">
-              <h3 className="text-2xl font-bold">Nexus POS Guide</h3>
+              <h3 className="text-2xl font-bold">Mayback POS Guide</h3>
               <div className="space-y-4 text-sm">
                 <section>
                   <h4 className="font-bold mb-1">POS System</h4>

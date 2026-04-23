@@ -25,11 +25,11 @@ export const Header = ({ onMenuClick }: { onMenuClick?: () => void }) => {
           <Menu size={24} />
         </button>
         <div className="hidden md:block">
-          <h2 className="text-sm font-black text-muted-fg uppercase tracking-[0.2em]">Nexus Terminal</h2>
+          <h2 className="text-sm font-black text-muted-fg uppercase tracking-[0.2em]">Mayback Terminal</h2>
           <p className="text-[10px] text-muted-fg/40 font-mono tracking-widest">v2.4.0-stable // SYSTEM_READY</p>
         </div>
         <div className="md:hidden">
-          <h2 className="text-xs font-black text-muted-fg uppercase tracking-widest">Nexus</h2>
+          <h2 className="text-xs font-black text-muted-fg uppercase tracking-widest">Mayback</h2>
         </div>
       </div>
 
