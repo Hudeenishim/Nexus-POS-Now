@@ -219,14 +219,14 @@ const AppContent = () => {
               <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
               {/* Protected shopping cart route */}
               <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-              {/* Protected inventory route, restricted to admin and manager roles */}
-              <Route path="/inventory" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><Inventory /></ProtectedRoute>} />
+              {/* Protected inventory route, restricted to admin, manager, and cashier roles */}
+              <Route path="/inventory" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'cashier']}><Inventory /></ProtectedRoute>} />
               {/* Protected suppliers management route */}
               <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
               {/* Protected customers management route */}
               <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
-              {/* Protected reports route, restricted to admin, manager, and cashier roles */}
-              <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'cashier']}><Reports /></ProtectedRoute>} />
+              {/* Protected reports route, restricted to admin and manager roles */}
+              <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><Reports /></ProtectedRoute>} />
               {/* Protected settings route, restricted to admin and manager roles */}
               <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><SettingsPage /></ProtectedRoute>} />
             </Routes>

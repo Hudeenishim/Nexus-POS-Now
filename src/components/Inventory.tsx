@@ -142,9 +142,11 @@ export const Inventory = () => {
               Low Stock
             </button>
           </div>
-          <button onClick={() => setShowAddModal(true)} className="btn btn-primary gap-2 w-full sm:w-auto py-2.5">
-            <Plus size={18} /> <span className="text-xs">Add Product</span>
-          </button>
+          {(user?.role === 'admin' || user?.role === 'manager') && (
+            <button onClick={() => setShowAddModal(true)} className="btn btn-primary gap-2 w-full sm:w-auto py-2.5">
+              <Plus size={18} /> <span className="text-xs">Add Product</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -228,13 +230,15 @@ export const Inventory = () => {
                       >
                         <QrCode size={18} />
                       </button>
-                      <button 
-                        onClick={() => setEditingProduct(product)}
-                        className="p-2 rounded-xl bg-bg border border-border text-muted-fg hover:text-primary hover:border-primary transition-all hover:scale-110"
-                        title="Edit Product"
-                      >
-                        <Edit3 size={18} />
-                      </button>
+                      {(user?.role === 'admin' || user?.role === 'manager') && (
+                        <button 
+                          onClick={() => setEditingProduct(product)}
+                          className="p-2 rounded-xl bg-bg border border-border text-muted-fg hover:text-primary hover:border-primary transition-all hover:scale-110"
+                          title="Edit Product"
+                        >
+                          <Edit3 size={18} />
+                        </button>
+                      )}
                       {(user?.role === 'admin' || user?.role === 'manager' || user?.email === 'salahnapari@gmail.com') && (
                         <button 
                           onClick={() => setDeleteConfirmation({ isOpen: true, productId: product.id, productName: product.name })}

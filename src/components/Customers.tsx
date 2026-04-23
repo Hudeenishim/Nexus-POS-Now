@@ -73,7 +73,9 @@ export const Customers = () => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Customers</h2>
-        <button onClick={() => setShowAdd(true)} className="btn btn-primary gap-2"><Plus size={20} /> Add Customer</button>
+        {(user?.role === 'admin' || user?.role === 'manager') && (
+          <button onClick={() => setShowAdd(true)} className="btn btn-primary gap-2"><Plus size={20} /> Add Customer</button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -105,9 +107,11 @@ export const Customers = () => {
                 </div>
               </div>
               <div className="flex gap-1">
-                <button className="p-2 hover:bg-muted rounded-xl text-muted-fg hover:text-primary transition-colors">
-                  <Settings size={18} />
-                </button>
+                {(user?.role === 'admin' || user?.role === 'manager') && (
+                  <button className="p-2 hover:bg-muted rounded-xl text-muted-fg hover:text-primary transition-colors">
+                    <Settings size={18} />
+                  </button>
+                )}
                 {(user?.role === 'admin' || user?.role === 'manager' || user?.email === 'salahnapari@gmail.com') && (
                   <button 
                     onClick={() => setDeleteConfirmation({ isOpen: true, id: customer.id, name: customer.name })}

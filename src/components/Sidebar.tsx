@@ -29,10 +29,10 @@ export const Sidebar = ({ isOpen, setIsOpen, mobile }: { isOpen: boolean, setIsO
     { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'cashier'] },
     { name: 'POS', path: '/pos', icon: ShoppingCart, roles: ['admin', 'manager', 'cashier'] },
     { name: 'Cart', path: '/cart', icon: ShoppingCart, roles: ['admin', 'manager', 'cashier'], badge: cartCount },
-    { name: 'Inventory', path: '/inventory', icon: Package, roles: ['admin', 'manager'] },
+    { name: 'Inventory', path: '/inventory', icon: Package, roles: ['admin', 'manager', 'cashier'] },
     { name: 'Suppliers', path: '/suppliers', icon: Truck, roles: ['admin', 'manager', 'cashier'] },
     { name: 'Customers', path: '/customers', icon: Users, roles: ['admin', 'manager', 'cashier'] },
-    { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['admin', 'manager', 'cashier'] },
+    { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['admin', 'manager'] },
     { name: 'Settings', path: '/settings', icon: Settings, roles: ['admin', 'manager'] },
   ];
 

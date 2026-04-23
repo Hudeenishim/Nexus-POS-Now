@@ -102,9 +102,11 @@ export const Suppliers = () => {
           <h2 className="text-3xl font-bold tracking-tight">Suppliers</h2>
           <p className="text-muted-fg">Manage your product suppliers and contacts</p>
         </div>
-        <button onClick={() => { setShowAdd(true); setEditingSupplier(null); }} className="btn btn-primary gap-2">
-          <Plus size={20} /> Add Supplier
-        </button>
+        {(user?.role === 'admin' || user?.role === 'manager') && (
+          <button onClick={() => { setShowAdd(true); setEditingSupplier(null); }} className="btn btn-primary gap-2">
+            <Plus size={20} /> Add Supplier
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -126,23 +128,25 @@ export const Suppliers = () => {
                 </div>
               </div>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => {
-                    setEditingSupplier(supplier);
-                    setNewSupplier({
-                      name: supplier.name,
-                      contactPerson: supplier.contactPerson,
-                      phone: supplier.phone,
-                      email: supplier.email || '',
-                      address: supplier.address || '',
-                      category: supplier.category || ''
-                    });
-                    setShowAdd(true);
-                  }}
-                  className="p-2 hover:bg-muted rounded-xl text-muted-fg hover:text-primary transition-colors"
-                >
-                  <Settings size={18} />
-                </button>
+                {(user?.role === 'admin' || user?.role === 'manager') && (
+                  <button 
+                    onClick={() => {
+                      setEditingSupplier(supplier);
+                      setNewSupplier({
+                        name: supplier.name,
+                        contactPerson: supplier.contactPerson,
+                        phone: supplier.phone,
+                        email: supplier.email || '',
+                        address: supplier.address || '',
+                        category: supplier.category || ''
+                      });
+                      setShowAdd(true);
+                    }}
+                    className="p-2 hover:bg-muted rounded-xl text-muted-fg hover:text-primary transition-colors"
+                  >
+                    <Settings size={18} />
+                  </button>
+                )}
                 {(user?.role === 'admin' || user?.role === 'manager' || user?.email === 'salahnapari@gmail.com') && (
                   <button onClick={() => setDeleteConfirmation({ isOpen: true, id: supplier.id, name: supplier.name })} className="p-2 hover:bg-red-500/10 rounded-xl text-muted-fg hover:text-red-500 transition-colors">
                     <Trash2 size={18} />

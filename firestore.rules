@@ -103,14 +103,18 @@ service cloud.firestore {
     match /products/{productId} {
       allow read: if isAuthenticated();
       allow create: if isManager() && isValidProduct(request.resource.data);
-      allow update: if isAdmin() || (isManager() && isValidProduct(request.resource.data)) || (isCashier() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']) && request.resource.data.quantity is number);
+      // Allow admins/managers full update. 
+      // Allow cashiers ONLY to update quantity (required for processing sales/decrementing stock)
+      allow update: if isAdmin() || 
+                    (isManager() && isValidProduct(request.resource.data)) || 
+                    (isCashier() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']));
       allow delete: if isAdmin() || isManager();
     }
 
     match /customers/{customerId} {
       allow read: if isAuthenticated();
-      allow create: if isCashier() && isValidCustomer(request.resource.data);
-      allow update: if isCashier() && isValidCustomer(request.resource.data);
+      allow create: if isManager() && isValidCustomer(request.resource.data);
+      allow update: if isManager() && isValidCustomer(request.resource.data);
       allow delete: if isAdmin() || isManager();
     }
 
