@@ -119,14 +119,16 @@ service cloud.firestore {
     }
 
     match /sales/{saleId} {
-      allow read: if isAuthenticated();
+      allow get: if true; // Allow public receipt verification
+      allow list: if isAuthenticated();
       allow create: if isCashier() && isValidSale(request.resource.data);
       allow delete: if isAdmin() || isManager();
       allow update: if false; // Sales are immutable
     }
 
     match /sales_items/{itemId} {
-      allow read: if isAuthenticated();
+      allow get: if true;
+      allow list: if isAuthenticated() || resource.data.saleId != null;
       allow create: if isCashier();
       allow delete: if isAdmin() || isManager();
       allow update: if false;
