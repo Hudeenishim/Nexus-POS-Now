@@ -19,10 +19,11 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { db } from '../firebase';
+import { toast } from 'sonner';
+import { db, auth } from '../firebase';
 import { useCart } from './CartContext';
 import { Product } from '../types';
-import { cn, formatCurrency } from '../lib/utils';
+import { cn, formatCurrency, OperationType, handleFirestoreError } from '../lib/utils';
 
 export const POS = () => {
   const { cart, addToCart, removeFromCart, updateQuantity, updateItemDiscount, subtotal, total } = useCart();
@@ -32,10 +33,21 @@ export const POS = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
-    const q = query(collection(db, 'products'), orderBy('name'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-    });
+    // Debug log to check user state
+    console.log("POS Initializing for user:", auth.currentUser?.email);
+    
+    // Using createdAt to match Inventory.tsx just in case of index issues
+    const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, 
+      (snapshot) => {
+        console.log("POS Snapshot received, count:", snapshot.size);
+        setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+      },
+      (error) => {
+        console.error("POS Products Subscription Error:", error);
+        handleFirestoreError(error, OperationType.GET, 'products', auth);
+      }
+    );
     return unsub;
   }, []);
 
@@ -49,11 +61,14 @@ export const POS = () => {
     }
   }, [search, products]);
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.barcode.includes(search) ||
-    p.category.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const searchLower = search.toLowerCase();
+    const nameMatch = p.name?.toLowerCase().includes(searchLower) ?? false;
+    const barcodeMatch = p.barcode?.includes(search) ?? false;
+    const categoryMatch = p.category?.toLowerCase().includes(searchLower) ?? false;
+    
+    return nameMatch || barcodeMatch || categoryMatch;
+  });
 
   return (
     <div className="h-[calc(100vh-120px)] flex gap-6 max-w-screen-2xl mx-auto overflow-hidden">
@@ -116,7 +131,17 @@ export const POS = () => {
         )}
 
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          {viewMode === 'grid' ? (
+          {filteredProducts.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-30 p-12">
+              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
+                <Package size={48} />
+              </div>
+              <div className="space-y-2">
+                <p className="font-black text-xl uppercase tracking-widest">No Products Found</p>
+                <p className="text-sm font-medium">Try adjusting your search or contact a manager if the inventory is empty.</p>
+              </div>
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredProducts.map((product) => (
                 <motion.div
